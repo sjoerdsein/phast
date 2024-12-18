@@ -10,7 +10,11 @@
 #include <QComboBox>
 #include <QSpinBox>
 
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_counter.h>
+#else
 #include <qwt-qt5/qwt_counter.h>
+#endif // TT_USE_BASE_QWT
 
 #include <vector>
 

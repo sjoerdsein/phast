@@ -27,7 +27,7 @@ private:
 
 public:
     writer_listeners(const writer_listeners&) = delete;
-    operator=(const writer_listeners&) = delete;
+    writer_listeners& operator=(const writer_listeners&) = delete;
 
     ~writer_listeners();
     writer_listeners(chan_id channel, IFileWriter* writer, bool only_write_once);

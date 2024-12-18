@@ -9,20 +9,23 @@ DEFINES += QUTAU_TIMETAG_PLUGIN_LIBRARY
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
-LIBS += -L$$OUT_PWD/../phast_gui -lphast_gui
+win32:LIBS += -L$$OUT_PWD/../phast_gui -lphast_gui
 
 # Link with QuTool's library
 LIBS += -L$$PWD/qutau_lib -ltdcbase
 
 # Add qwt directory to search path
-INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt-qt5"
+win32:INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt-qt5"
+unix:INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt"
 
 # Also the qwt lib
-LIBS += -lqwt-qt5
+win32:LIBS += -lqwt-qt5
+unix:LIBS += -lqwt
+unix:DEFINES += TT_USE_BASE_QWT unix
+
+
 INCLUDEPATH += $$PWD/..
 
-
-INCLUDEPATH += ./../
 
 SOURCES += \
         qutau_timetag_plugin.cpp \

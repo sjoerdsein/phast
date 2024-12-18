@@ -30,7 +30,7 @@ protected:
     uint64_t n_removed_in_last_purge;
     int64_t purge_up_to_this_index;
     uint64_t size_before_last_purge;
-    std::map<IListener*,index> listeners_purge_requests;
+    std::map<IListener*,index_t> listeners_purge_requests;
 
     uint64_t sync_div_counter;
     bool ShouldIgnoreThisEvent();

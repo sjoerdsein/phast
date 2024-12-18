@@ -7,7 +7,11 @@
 
 #include <QObject>
 #include <map>
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_plot_curve.h>
+#else
 #include <qwt-qt5/qwt_plot_curve.h>
+#endif // TT_USE_BASE_QWT
 
 #include "../support/plotparams.h"
 #include "../support/typedefs.h"

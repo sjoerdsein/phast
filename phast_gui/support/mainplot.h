@@ -5,7 +5,11 @@
 #ifndef MAINPLOT_H
 #define MAINPLOT_H
 
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_plot.h>
+#else
 #include <qwt-qt5/qwt_plot.h>
+#endif // TT_USE_BASE_QWT
 
 class QwtPlotCurve;
 class QwtPlotMarker;

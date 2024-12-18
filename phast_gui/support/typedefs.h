@@ -12,7 +12,7 @@
 typedef uint64_t chan_id;
 typedef uint64_t opaque_ptr;
 typedef int64_t timestamp;
-typedef uint64_t index;
+typedef uint64_t index_t;
 
 struct photon_event;
 

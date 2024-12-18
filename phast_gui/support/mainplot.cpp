@@ -4,6 +4,16 @@
 
 #include "mainplot.h"
 
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_plot_canvas.h>
+#include <qwt/qwt_legend.h>
+#include <qwt/qwt_scale_engine.h>
+#include <qwt/qwt_symbol.h>
+#include <qwt/qwt_plot_marker.h>
+#include <qwt/qwt_plot_zoomer.h>
+#include <qwt/qwt_picker_machine.h>
+#include <qwt/qwt_plot_layout.h>
+#else
 #include <qwt-qt5/qwt_plot_canvas.h>
 #include <qwt-qt5/qwt_legend.h>
 #include <qwt-qt5/qwt_scale_engine.h>
@@ -12,6 +22,7 @@
 #include <qwt-qt5/qwt_plot_zoomer.h>
 #include <qwt-qt5/qwt_picker_machine.h>
 #include <qwt-qt5/qwt_plot_layout.h>
+#endif // TT_USE_BASE_QWT
 
 #include "customscaledraw.h"
 

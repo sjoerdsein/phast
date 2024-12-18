@@ -5,7 +5,11 @@
 #ifndef CUSTOMSCALEDRAW_H
 #define CUSTOMSCALEDRAW_H
 
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_scale_draw.h>
+#else
 #include <qwt-qt5/qwt_scale_draw.h>
+#endif // TT_USE_BASE_QWT
 
 class CustomScaleDraw : public QwtScaleDraw
 {

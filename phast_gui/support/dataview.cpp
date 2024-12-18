@@ -8,7 +8,11 @@
 #include "mainplot.h"
 
 #include <QTimer>
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_plot_curve.h>
+#else
 #include <qwt-qt5/qwt_plot_curve.h>
+#endif // TT_USE_BASE_QWT
 
 DataView::~DataView()
 {

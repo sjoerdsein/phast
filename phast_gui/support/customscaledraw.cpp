@@ -5,7 +5,11 @@
 #include "customscaledraw.h"
 
 #include <math.h>
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_text.h>
+#else
 #include <qwt-qt5/qwt_text.h>
+#endif // TT_USE_BASE_QWT
 
 CustomScaleDraw::CustomScaleDraw(bool do_not_show_biggest_val) :
     QwtScaleDraw(),

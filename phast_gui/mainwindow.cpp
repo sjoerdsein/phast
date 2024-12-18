@@ -3,7 +3,11 @@
 
 #include "support/mainplot.h"
 
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_plot_curve.h>
+#else
 #include <qwt-qt5/qwt_plot_curve.h>
+#endif // TT_USE_BASE_QWT
 
 #include <vector>
 #include <math.h>

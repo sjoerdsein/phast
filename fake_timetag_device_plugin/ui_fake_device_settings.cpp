@@ -5,7 +5,11 @@
 #include "ui_fake_device_settings.h"
 #include "ui_ui_fake_device_settings.h"
 
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_counter.h>
+#else
 #include <qwt-qt5/qwt_counter.h>
+#endif
 
 ui_fake_device_settings::ui_fake_device_settings(QWidget *parent, fake_device_settings initial_settings, bool can_change_timeunit) :
     QDialog(parent),

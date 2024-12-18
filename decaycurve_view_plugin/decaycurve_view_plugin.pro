@@ -8,13 +8,16 @@ QMAKE_CXXFLAGS += -Wno-unused-parameter
 
 LIBS += -llibtimetag
 
-LIBS += -L$$OUT_PWD/../phast_gui -lphast_gui
+win32:LIBS += -L$$OUT_PWD/../phast_gui -lphast_gui
 
 # Add qwt directory to search path
-INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt-qt5"
+win32:INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt-qt5"
+unix:INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt"
 
 # Also the qwt lib
-LIBS += -lqwt-qt5
+win32:LIBS += -lqwt-qt5
+unix:LIBS += -lqwt
+unix:DEFINES += TT_USE_BASE_QWT
 
 INCLUDEPATH += $$PWD/..
 

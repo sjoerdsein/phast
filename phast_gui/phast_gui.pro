@@ -13,14 +13,19 @@ DEFINES += TT_BUILDING_APPLICATION
 QMAKE_CXXFLAGS += -Weffc++ -Wno-unused-parameter
 
 # Add qwt directory to search path
-INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt-qt5"
+win32:INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt-qt5"
+unix:INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt"
 
 # Also the qwt lib
-LIBS += -lqwt-qt5
+win32:LIBS += -lqwt-qt5
+unix:LIBS += -lqwt
+unix:DEFINES += TT_USE_BASE_QWT
 
 INCLUDEPATH += $$PWD/..
 
-LIBS += -llibtimetag -Wl,--out-implib=libphast_gui.dll.a
+win32:LIBS += -llibtimetag -Wl,--out-implib=libphast_gui.dll.a
+unix:LIBS += -llibtimetag
+unix:QMAKE_LFLAGS += -rdynamic
 
 TARGET = phast
 TEMPLATE = app

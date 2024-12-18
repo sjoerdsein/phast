@@ -12,8 +12,13 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QtGlobal>
-#include <qwt-qt5/qwt_counter.h>
 #include <QMessageBox>
+
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_counter.h>
+#else
+#include <qwt-qt5/qwt_counter.h>
+#endif // TT_USE_BASE_QWT
 
 void ChannelOverviewUI::init_ui_table()
 {

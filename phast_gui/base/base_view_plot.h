@@ -8,7 +8,12 @@
 #include <QDialog>
 #include <QListWidgetItem>
 
+#ifdef TT_USE_BASE_QWT
+#include <qwt/qwt_plot_curve.h>
+#else
 #include <qwt-qt5/qwt_plot_curve.h>
+#endif // TT_USE_BASE_QWT
+
 #include "../support/typedefs.h"
 
 #include "../interfaces/ibinningclass.h"
@@ -37,7 +42,7 @@ private:
 
 public:
     base_view_plot_datawindow(const base_view_plot_datawindow&) = delete;
-    operator=(const base_view_plot_datawindow&) = delete;
+    base_view_plot_datawindow& operator=(const base_view_plot_datawindow&) = delete;
 
     explicit base_view_plot_datawindow(base_view_plot* owner);
 

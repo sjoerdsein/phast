@@ -30,7 +30,7 @@ public:
     std::vector<photon_event>* all_raw_data;
 
     reader_coord(const reader_coord&) = delete;
-    operator=(const reader_coord&) = delete;
+    reader_coord& operator=(const reader_coord&) = delete;
 
     explicit reader_coord(QString filename);
 
