@@ -28,6 +28,11 @@ do
 done
 
 
+# Copy quTAG MC plugin
+mkdir -p ${deployDir}/qutag_mc_plugin
+cp ./qutag_mc_timetag_plugin/qutag_mc_lib/libtdcbase.so ${deployDir}/qutag_mc_plugin/
+cp ${buildDir}/qutag_mc_timetag_plugin/libqutag_mc_timetag_plugin.so ${deployDir}/qutag_mc_plugin/
+
 # # Copy quTAG plugin: not supported on Linux
 # mkdir -p ${deployDir}/qutag_plugin
 # cp ./qutag_timetag_plugin/qutag_lib/libtdcbase.so ${deployDir}/qutag_plugin/
@@ -39,9 +44,11 @@ done
 # cp ${buildDir}/qutau_timetag_plugin/libqutau_timetag_plugin.so ${deployDir}/qutau_plugin/
 
 # Create shortcut files to start using qutag or qutau plugins
+echo "./phast -P qutag_mc_plugin" > ${deployDir}phast_qutag_mc
 # echo "phast -P qutag_plugin" > ${deployDir}phast_qutag
 # echo "phast -P qutau_plugin" > ${deployDir}phast_qutau
 
+chmod +x ${deployDir}phast_qutag_mc
 # chmod +x ${deployDir}phast_qutag
 # chmod +x ${deployDir}phast_qutau
 

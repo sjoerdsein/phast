@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 buildDir=./build/
 deployDir=./deployed/
 appProjectName=phast_gui
@@ -10,11 +12,11 @@ buildMode=release
 plugins=("decaycurve_view_plugin" "correlation_view_plugin" "fake_timetag_device_plugin" "timetrace_view_plugin")
 
 
-mkdir ${deployDir}
+mkdir -p ${deployDir}
 cp ${buildDir}${appProjectName}/${buildMode}/${appName} ${deployDir}
 
 # do Qt deployment
-windeployqt ${deployDir}${appName}
+windeployqt ${deployDir}/${appName}
 
 # Find dependencies
 deps=$(ntldd -R ${deployDir}${appName} | grep -v 'C:\\WINDOWS\\' | grep -v ext-ms- | grep -v "not found" | awk '{print $1}')
@@ -31,7 +33,7 @@ do
 done
 
 # Copy plugins
-mkdir ${deployDir}/plugins
+mkdir -p ${deployDir}/plugins
 
 for pl in "${plugins[@]}"
 do
@@ -52,23 +54,31 @@ do
 	done
 done
 
+# Copy quTAG MC plugin
+mkdir -p ${deployDir}/qutag_mc_plugin
+cp ./qutag_mc_timetag_plugin/qutag_mc_bin/tdcbase.dll ${deployDir}/qutag_mc_plugin/
+cp ./qutag_mc_timetag_plugin/qutag_mc_bin/FTD3XX.dll ${deployDir}/qutag_mc_plugin/
+cp ./qutag_mc_timetag_plugin/qutag_mc_bin/libusb0.dll ${deployDir}/qutag_mc_plugin/
+cp ./build/qutag_mc_timetag_plugin/release/qutag_mc_timetag_plugin.dll ${deployDir}/qutag_mc_plugin/
+
 # Copy quTAG plugin
-mkdir ${deployDir}/qutag_plugin
+mkdir -p ${deployDir}/qutag_plugin
 cp ./qutag_timetag_plugin/qutag_bin/tdcbase.dll ${deployDir}/qutag_plugin/
 cp ./qutag_timetag_plugin/qutag_bin/FTD3XX.dll ${deployDir}/qutag_plugin/
 cp ./qutag_timetag_plugin/qutag_bin/libusb0.dll ${deployDir}/qutag_plugin/
 cp ./build/qutag_timetag_plugin/release/qutag_timetag_plugin.dll ${deployDir}/qutag_plugin/
 
 # Copy quTAU plugin
-mkdir ${deployDir}/qutau_plugin
+mkdir -p ${deployDir}/qutau_plugin
 cp ./qutau_timetag_plugin/qutau_bin/tdcbase.dll ${deployDir}/qutau_plugin/
 cp ./qutau_timetag_plugin/qutau_bin/libusb0.dll ${deployDir}/qutau_plugin/
 cp ./build/qutau_timetag_plugin/release/qutau_timetag_plugin.dll ${deployDir}/qutau_plugin/
 
 # Create Bat files to start using qutag or qutau plugins
-echo "phast.exe -P qutag_plugin" > ./deployed/phast_qutag.bat
-echo "phast.exe -P qutau_plugin" > ./deployed/phast_qutau.bat
+echo "phast.exe -P qutag_mc_plugin" > ${deployDir}/phast_qutag_mc.bat
+echo "phast.exe -P qutag_plugin" > ${deployDir}/phast_qutag.bat
+echo "phast.exe -P qutau_plugin" > ${deployDir}/phast_qutau.bat
 
 # Copy in readme and license file
-cp LICENSE ${deployDir}license.txt
-cp app_readme.txt ${deployDir}readme.txt
+cp LICENSE ${deployDir}/license.txt
+cp app_readme.txt ${deployDir}/readme.txt
