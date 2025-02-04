@@ -3,7 +3,7 @@
 set -e
 mkdir -p build
 cd build
-qmake -r ../phast.pro
+qmake CONFIG+=c++2a -r ../phast.pro
 make
 cd ..
 mkdir -p deployed

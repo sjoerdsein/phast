@@ -1,4 +1,5 @@
 /* Copyright (c) 2020 Stijn Hinterding, Utrecht University
+ * Modifications (c) 2025 Sjoerd Seinhorst, Utrecht University
  * This sofware is licensed under the MIT license (see the LICENSE file)
 */
 
@@ -75,48 +76,18 @@ void Qutag_mc_timetag_plugin::ShowTriggerSettingsUI(QWidget *parent, const std::
 }
 
 /// Update the `chan_settings` member to contain exactly the channels listed in `active_channels`
-void Qutag_mc_timetag_plugin::update_chan_settings_map(const std::vector<chan_id>& active_channels)
-{
-    std::vector<chan_id> actives = active_channels;
-    std::vector<chan_id> to_be_removed;
+void Qutag_mc_timetag_plugin::update_chan_settings_map(std::vector<chan_id> const & active_channels) {
+    std::map<chan_id, chan_trigger_settings> new_settings{}; // Create a new map to replace the old one
 
-    // See if the stored channels are in the active list.
-    for (auto pair : this->chan_settings) {
-        chan_id id = pair.first;
-        bool found = false;
-        uint64_t found_index = 0;
-
-        for (uint64_t i = 0; i < actives.size(); i++) {
-            if (id == actives.at(i)) { // We found a hit
-                found = true;
-                found_index = 0;
-                break;
-            }
-        }
-
-        if (!found) { // Hit not found, so remove this channel.
-            to_be_removed.push_back(id);
-        } else { // Hit found, so we don't need to add this active channel.
-            actives.erase(actives.begin() + found_index);
+    for (chan_id a : active_channels) { // Only fill the new map with active channels
+        if (auto node = chan_settings.extract(a)) { // If it exists in the old map, move it over
+            node.key() = a;
+            new_settings.insert(std::move(node));
+        } else { // If this channel was not in the old map, initialize with default settings
+            new_settings.emplace(a, chan_trigger_settings {.ID = a});
         }
     }
 
-    for (chan_id rem : to_be_removed) { // Remove inactive channels
-        for (auto it = this->chan_settings.begin(); it != this->chan_settings.end(); it++) {
-            auto pair = *it;
-            chan_id id = pair.first;
-
-            if (id == rem) {
-                this->chan_settings.erase(it);
-                break;
-            }
-        }
-    }
-
-    for (chan_id a : actives) { // Add active channels we did not have yet.
-        chan_trigger_settings cts;
-        cts.ID = a;
-
-        this->chan_settings[a] = cts;
-    }
+    // Replace the old map with the new one
+    chan_settings = std::move(new_settings);
 }

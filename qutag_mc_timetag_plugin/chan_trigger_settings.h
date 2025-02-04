@@ -1,4 +1,5 @@
 /* Copyright (c) 2020 Stijn Hinterding, Utrecht University
+ * Modifications (c) 2025 Sjoerd Seinhorst, Utrecht University
  * This sofware is licensed under the MIT license (see the LICENSE file)
 */
 
@@ -15,25 +16,12 @@ public:
         RISING = 1,
     };
 
-    uint64_t ID;
-    bool signal_conditioning_enabled;
-    trigger_edge edge;
-    //bool terminate_in_signal_path;
-    double voltage_threshold;
-    uint64_t sync_divider;
-
-    int64_t delay_time;
-
-    chan_trigger_settings() :
-        ID(0),
-        signal_conditioning_enabled(true),
-        edge(RISING),
-        //terminate_in_signal_path(true),
-        voltage_threshold(-0.4),
-        sync_divider(1),
-        delay_time(0)
-    {
-    }
+    uint64_t ID {0};
+    uint64_t sync_divider {1};
+    int64_t delay_time {0}; // ps
+    double voltage_threshold {-0.4}; // V
+    trigger_edge edge {RISING};
+    bool signal_conditioning_enabled {true};
 };
 
 #endif // CHAN_TRIGGER_SETTINGS_H
