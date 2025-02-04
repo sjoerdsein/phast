@@ -9,6 +9,7 @@
 
 #include "chan_trigger_settings.h"
 
+/// Add the labels above the columns in the table of trigger settings
 void triggersettings_ui::init_ui_table()
 {
     QLabel* lbl_chan = new QLabel("Channel no.", this);
@@ -28,8 +29,10 @@ void triggersettings_ui::init_ui_table()
     this->ui->gridLayout->addWidget(lbl_term_enabled, 0, 5, 1, 1, Qt::AlignTop);
 }
 
+/// Add a new row with the ID supplied in `chan_info`
 void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
 {
+    // Define the widgets with their settings
     chan_widgets cw;
     cw.channel_number = chan_info.ID;
     cw.chan_num = new QLabel(QString::number(chan_info.ID), this);
@@ -64,6 +67,7 @@ void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
         cw.sync_divider->setEnabled(false);
     }
 
+    // Add the labels to the grid
     int row = this->ui->gridLayout->rowCount() + 1;
     this->ui->gridLayout->addWidget(cw.chan_num, row, 0, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(cw.voltage_threshold, row, 1, 1, 1, Qt::AlignTop);
@@ -75,6 +79,8 @@ void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
 
     this->channels_widgets[chan_info.ID] = cw;
 
+    // Connect the signals and the slots, to call the correct function when one
+    // of the widgets updates
     connect(cw.combo_trigger_edge, QOverload<int>::of(&QComboBox::currentIndexChanged),
         [=, this](int index){this->trigger_edge_changed(chan_info.ID, index);});
 
@@ -91,6 +97,7 @@ void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
             [=, this](int index){this->sync_divider_changed(chan_info.ID, index);});
 }
 
+/// Update the channel widgets to correspond with the supplied trigger settings
 void triggersettings_ui::use_channel_prefs(chan_trigger_settings ci)
 {
     chan_widgets cw = this->channels_widgets[ci.ID];
@@ -123,6 +130,7 @@ void triggersettings_ui::use_channel_prefs(chan_trigger_settings ci)
     cw.sync_divider->setCurrentIndex(index);
 }
 
+/// Enable the widgets that are relevant for adjusting the channel conditioning
 void triggersettings_ui::set_channel_conditioning_enabled(uint64_t chan_ID, bool enabled)
 {
     chan_widgets cw = this->channels_widgets[chan_ID];
@@ -132,6 +140,7 @@ void triggersettings_ui::set_channel_conditioning_enabled(uint64_t chan_ID, bool
     cw.voltage_threshold->setEnabled(enabled);
 }
 
+/// Create the UI for changing the trigger settings
 triggersettings_ui::triggersettings_ui(QWidget *parent, qutag_mc_communicator *tt_comm, const std::map<chan_id, chan_trigger_settings> &chan_settings) :
     QDialog((QWidget*)parent),
     ui(new Ui::triggersettings_ui),
@@ -169,11 +178,13 @@ triggersettings_ui::triggersettings_ui(QWidget *parent, qutag_mc_communicator *t
     this->updating_prefs = false;
 }
 
+/// Delete the UI for changing the trigger settings
 triggersettings_ui::~triggersettings_ui()
 {
     delete ui;
 }
 
+/// Update the channel info when the trigger edge widget is updated
 void triggersettings_ui::trigger_edge_changed(uint64_t chan_ID, int64_t combobox_index)
 {
     if (this->updating_prefs)
@@ -190,19 +201,8 @@ void triggersettings_ui::trigger_edge_changed(uint64_t chan_ID, int64_t combobox
     }
 }
 
-void triggersettings_ui::sync_divider_changed(uint64_t chan_ID, int64_t combobox_index)
-{
-    if (this->updating_prefs)
-        return;
-
-    chan_widgets cw = this->channels_widgets[chan_ID];
-
-    QString text = cw.sync_divider->currentText();
-    int new_sync_val = text.toInt();
-
-    this->chan_info[chan_ID].sync_divider = new_sync_val;
-}
-
+/// Not relevant for quTAG MC. Update the channel info when termination widget
+/// is updated
 void triggersettings_ui::termination_enabled_changed(uint64_t chan_ID, int64_t check_state)
 {
     return;
@@ -218,6 +218,7 @@ void triggersettings_ui::termination_enabled_changed(uint64_t chan_ID, int64_t c
     */
 }
 
+/// Update the channel info when the voltage threshold widget is updated
 void triggersettings_ui::voltage_threshold_changed(uint64_t chan_ID, double new_val)
 {
     if (this->updating_prefs)
@@ -226,6 +227,7 @@ void triggersettings_ui::voltage_threshold_changed(uint64_t chan_ID, double new_
     this->chan_info[chan_ID].voltage_threshold = new_val;
 }
 
+/// Update the channel info when the delay time widget is updated
 void triggersettings_ui::delay_time_changed(uint64_t chan_ID, int new_val)
 {
     if (this->updating_prefs)
@@ -234,11 +236,21 @@ void triggersettings_ui::delay_time_changed(uint64_t chan_ID, int new_val)
     this->chan_info[chan_ID].delay_time = new_val;
 }
 
-const std::map<chan_id, chan_trigger_settings> &triggersettings_ui::ChannelInfo() const
+/// Update the channel info when the sync divider widget is updated
+void triggersettings_ui::sync_divider_changed(uint64_t chan_ID, int64_t combobox_index)
 {
-    return this->chan_info;
+    if (this->updating_prefs)
+        return;
+
+    chan_widgets cw = this->channels_widgets[chan_ID];
+
+    QString text = cw.sync_divider->currentText();
+    int new_sync_val = text.toInt();
+
+    this->chan_info[chan_ID].sync_divider = new_sync_val;
 }
 
+/// Upload the selected trigger settings for channel `chan_ID` to the device
 void triggersettings_ui::push_to_device(uint64_t chan_ID)
 {
     std::cout << "Setting threshold of channel " << chan_ID << " to " << this->chan_info[chan_ID].voltage_threshold << " V" << std::endl;
@@ -249,6 +261,13 @@ void triggersettings_ui::push_to_device(uint64_t chan_ID)
     this->chan_info[chan_ID] = checked_val;
 }
 
+/// Return the current channel info map (trigger settings for each channel)
+const std::map<chan_id, chan_trigger_settings> &triggersettings_ui::ChannelInfo() const
+{
+    return this->chan_info;
+}
+
+/// When the Apply button is clicked, upload all trigger settings to the device
 void triggersettings_ui::on_btn_apply_clicked()
 {
     for (auto pair : this->chan_info) {
@@ -258,6 +277,8 @@ void triggersettings_ui::on_btn_apply_clicked()
     }
 }
 
+/// When the Cancel button is clicked, restore the previous channel info and
+/// upload this to the device
 void triggersettings_ui::on_btn_cancel_clicked()
 {
     this->chan_info = this->original_chan_info;
@@ -273,6 +294,7 @@ void triggersettings_ui::on_btn_cancel_clicked()
     this->setResult(QDialog::Rejected);
 }
 
+/// When the OK button is clicked, apply the settings and close the window
 void triggersettings_ui::on_btn_OK_clicked()
 {
     this->on_btn_apply_clicked();

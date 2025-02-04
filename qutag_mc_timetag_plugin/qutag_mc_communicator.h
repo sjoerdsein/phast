@@ -7,7 +7,6 @@
 
 #include <vector>
 #include <stdint.h>
-#include <map>
 
 #include <phast_gui/support/photon_event.h>
 #include <phast_gui/interfaces/itimetaggercommunicator.h>
@@ -31,40 +30,35 @@ private:
     std::string device_descriptor;
 
 private:
-    void check_for_events();
-
     void update_channels_enabled();
-
     virtual void EnableChannel(chan_id channel_id);
     virtual void DisableChannel(chan_id channel_id);
     virtual void SetChannelEnabled(chan_id channel_id, bool enabled);
 
+    // void check_for_events();
+
 public:
     explicit qutag_mc_communicator(uint64_t buffer_size=1000000);
-
     virtual ~qutag_mc_communicator() override;
 
-    bool DevicePresent() const;
+    virtual bool AnyDeviceAvailable() const override;
+    virtual bool TryToConnect(int64_t device_ID) override;
+    virtual bool Disconnect() override;
 
-    virtual uint64_t ReceiveData(std::vector<int64_t>* timestamps,
-                             std::vector<uint8_t>* channel_IDs) override;
-
-    virtual chan_trigger_settings UpdateSignalConditioning(uint64_t chan_ID, chan_trigger_settings new_values);
-    virtual chan_trigger_settings GetSignalConditioning(uint64_t chan_ID);
-    virtual uint64_t UpdateSyncDivider(uint64_t value);
-
-
+    virtual bool IsRealDevice() const override;
+    virtual bool ConnectedToDevice() override;
+    virtual uint64_t GetNumDevicesConnected() override;
+    virtual double TimeUnit() const override;
+    virtual const std::string& DeviceDescriptor() const override;
+    // bool DevicePresent() const;
 
     virtual uint64_t GetSyncDivider(chan_id channel_id) override;
-    virtual bool ConnectedToDevice() override;
-    virtual const std::string& DeviceDescriptor() const override;
-    virtual bool TryToConnect(int64_t device_ID) override;
+    virtual uint64_t UpdateSyncDivider(uint64_t value);
+    virtual chan_trigger_settings GetSignalConditioning(uint64_t chan_ID);
+    virtual chan_trigger_settings UpdateSignalConditioning(uint64_t chan_ID, chan_trigger_settings new_values);
+
     virtual bool DataLossSinceLastCall() override;
-    virtual double TimeUnit() const override;
-    virtual bool AnyDeviceAvailable() const override;
-    virtual bool Disconnect() override;
-    virtual uint64_t GetNumDevicesConnected() override;
-    virtual bool IsRealDevice() const override;
+    virtual uint64_t ReceiveData(std::vector<int64_t>* timestamps, std::vector<uint8_t>* channel_IDs) override;
 };
 
 #endif // QUTAU_COMMUNICATOR_H

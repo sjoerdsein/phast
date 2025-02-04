@@ -21,6 +21,7 @@ namespace Ui {
 class triggersettings_ui;
 }
 
+
 class triggersettings_ui : public QDialog
 {
     Q_OBJECT
@@ -48,9 +49,7 @@ public:
 
 private slots:
     void on_btn_apply_clicked();
-
     void on_btn_cancel_clicked();
-
     void on_btn_OK_clicked();
 
 private:
@@ -63,17 +62,16 @@ private:
 
     qutag_mc_communicator* tt_comm;
 
-    void trigger_edge_changed(uint64_t chan_ID, int64_t combobox_index);
-    void termination_enabled_changed(uint64_t chan_ID, int64_t check_state);
-    void voltage_threshold_changed(uint64_t chan_ID, double new_val);
-    void delay_time_changed(uint64_t chan_ID, int new_val);
-
-    void sync_divider_changed(uint64_t chan_ID, int64_t combobox_index);
-
     void init_ui_table();
     void add_channel_widgets(chan_trigger_settings chan_info);
     void use_channel_prefs(chan_trigger_settings ci);
     void set_channel_conditioning_enabled(uint64_t chan_ID, bool enabled);
+
+    void trigger_edge_changed(uint64_t chan_ID, int64_t combobox_index);
+    void termination_enabled_changed(uint64_t chan_ID, int64_t check_state);
+    void voltage_threshold_changed(uint64_t chan_ID, double new_val);
+    void delay_time_changed(uint64_t chan_ID, int new_val);
+    void sync_divider_changed(uint64_t chan_ID, int64_t combobox_index);
 
     void push_to_device(uint64_t chan_ID);
 };

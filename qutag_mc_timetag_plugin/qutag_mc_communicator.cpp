@@ -10,70 +10,37 @@
 
 #include "chan_trigger_settings.h"
 
-#include <map>
 #include <iostream>
 
 #define MAX_BUF_SIZE 1000000
 #define EXPOSURE_TIME 100       // in ms
 
+/// Initialize the communicator and close all existing device connections.
+qutag_mc_communicator::qutag_mc_communicator(uint64_t buffer_size) :
+    have_device(false),
+    device_type(DEVTYPE_NONE),
+    enabled_channels(),
+    time_unit_seconds(0.0),
+    timestamp_buffer_size(buffer_size),
+    reset_buffer_after_event_retrieval(true),
+    device_descriptor("None")
+{
+    if (buffer_size > MAX_BUF_SIZE)
+        this->timestamp_buffer_size = MAX_BUF_SIZE;
+
+    unsigned int temp = 0;
+    TDC_discover(&temp);
+}
+
+/// Destruct the object after closing the open connection
 qutag_mc_communicator::~qutag_mc_communicator()
 {
     if (this->have_device)
         TDC_deInit();
 }
 
-bool qutag_mc_communicator::IsRealDevice() const
-{
-    return true;
-}
-
-void qutag_mc_communicator::update_channels_enabled()
-{
-    int32_t channels_mask = 0;
-
-    for (chan_id id : this->enabled_channels) {
-        channels_mask &= id;
-    }
-
-    TDC_enableChannels(true, channels_mask);  // TODO Should enStart always be true?
-}
-
-void qutag_mc_communicator::EnableChannel(chan_id channel_id)
-{
-    for (chan_id id : this->enabled_channels) {
-        if (id == channel_id)
-            return;
-    }
-
-    this->enabled_channels.push_back(channel_id);
-    this->update_channels_enabled();
-}
-
-void qutag_mc_communicator::DisableChannel(chan_id channel_id)
-{
-    bool found = false;
-    uint64_t index = 0;
-
-    for (uint64_t i = 0; i < this->enabled_channels.size(); i++) {
-        if (this->enabled_channels.at(i) == channel_id) {
-            found = true;
-            index = i;
-            break;
-        }
-    }
-
-    if (!found)
-        return;
-
-    this->enabled_channels.erase(this->enabled_channels.begin() + index);
-    this->update_channels_enabled();
-}
-
-void qutag_mc_communicator::SetChannelEnabled(chan_id channel_id, bool enabled)
-{
-    return (enabled) ? this->EnableChannel(channel_id) : this->DisableChannel(channel_id);
-}
-
+/// Test if any device can be found by connecting and disconnecting any
+/// available device, if none are connected already.
 bool qutag_mc_communicator::AnyDeviceAvailable() const
 {
     if (this->have_device)
@@ -91,6 +58,11 @@ bool qutag_mc_communicator::AnyDeviceAvailable() const
     return false;
 }
 
+/// If no device is connected, connect to the device specified by the
+/// `device_ID`, where `-1` means any device.  Sets the timestamp buffer size,
+/// enables all channels, reads the timebase and (for quTAG HR) resets the sync
+/// divider.  Returns true if a new device was connected or if there was a device
+/// connected already. Returns false if the connection failed.
 bool qutag_mc_communicator::TryToConnect(int64_t device_ID)
 {
     if (this->have_device)
@@ -129,8 +101,6 @@ bool qutag_mc_communicator::TryToConnect(int64_t device_ID)
 
     TDC_setTimestampBufferSize(this->timestamp_buffer_size);
 
-    TDC_setExposureTime(EXPOSURE_TIME);
-
     // By default we enable ALL channels
     TDC_enableChannels(true, 0xFF);
 
@@ -150,53 +120,110 @@ bool qutag_mc_communicator::TryToConnect(int64_t device_ID)
     return true;
 }
 
-qutag_mc_communicator::qutag_mc_communicator(uint64_t buffer_size) :
-    have_device(false),
-    device_type(DEVTYPE_NONE),
-    enabled_channels(),
-    time_unit_seconds(0.0),
-    timestamp_buffer_size(buffer_size),
-    reset_buffer_after_event_retrieval(true),
-    device_descriptor("none")
+/// De-initialize the device
+bool qutag_mc_communicator::Disconnect()
 {
-    if (buffer_size > MAX_BUF_SIZE)
-        this->timestamp_buffer_size = MAX_BUF_SIZE;
+    TDC_deInit();
+    this->have_device = false;
 
-    unsigned int temp = 0;
-    TDC_discover(&temp);
+    return true;
 }
 
-uint64_t qutag_mc_communicator::ReceiveData(std::vector<int64_t>* timestamps,
-                                     std::vector<uint8_t>* chan_IDs)
+/// Yes, this is a real device
+bool qutag_mc_communicator::IsRealDevice() const
 {
-    timestamps->resize(this->timestamp_buffer_size);
-    chan_IDs->resize(this->timestamp_buffer_size);
-
-    uint64_t num_valid_events = 0;
-
-    TDC_getLastTimestamps(this->reset_buffer_after_event_retrieval,
-                          (int64_t*)&(*timestamps)[0],
-                          (Uint8*)&(*chan_IDs)[0],
-                          (Int32*)&num_valid_events);
-
-    timestamps->resize(num_valid_events);
-    chan_IDs->resize(num_valid_events);
-
-    return num_valid_events;
+    return true;
 }
 
-uint64_t qutag_mc_communicator::UpdateSyncDivider(uint64_t value)
+/// Returns whether a device is connected and initialized
+bool qutag_mc_communicator::ConnectedToDevice()
 {
-    if (this->device_type != DEVTYPE_QUTAG_HR)
-        return 1;
-
-    Int32 divider = value;
-
-    TDC_configureSyncDivider(divider, false);
-
-    return this->GetSyncDivider(0);
+    return this->have_device;
 }
 
+/// Returns the number of devices that are connected to this instance of tdcbase
+uint64_t qutag_mc_communicator::GetNumDevicesConnected()
+{
+    if (this->have_device)
+        return 0;
+
+    uint64_t ret = 0;
+    TDC_discover((unsigned int*)&ret);
+
+    return ret;
+}
+
+/// Returns the time unit (cq time tag bin size) of this device
+double qutag_mc_communicator::TimeUnit() const
+{
+    double result = 0;
+
+    TDC_getTimebase(&result);
+
+    return result;
+}
+
+/// Return the name (device type) of this device
+const std::string& qutag_mc_communicator::DeviceDescriptor() const
+{
+    return this->device_descriptor;
+}
+
+/// Set the channels enabled on the device according to the `enabled_channels`
+/// member variable. The start channel is always enabled.
+void qutag_mc_communicator::update_channels_enabled()
+{
+    int32_t channels_mask = 0;
+
+    for (chan_id id : this->enabled_channels) {
+        channels_mask &= id;
+    }
+
+    TDC_enableChannels(true, channels_mask);  // TODO Should enStart always be true?
+}
+
+/// Enable the specified channel. Channel 0 is the start channel.
+void qutag_mc_communicator::EnableChannel(chan_id channel_id)
+{
+    for (chan_id id : this->enabled_channels) {
+        if (id == channel_id)
+            return;
+    }
+
+    this->enabled_channels.push_back(channel_id);
+    this->update_channels_enabled();
+}
+
+/// Disable the specified channel. Channel 0 is the start channel.
+void qutag_mc_communicator::DisableChannel(chan_id channel_id)
+{
+    bool found = false;
+    uint64_t index = 0;
+
+    for (uint64_t i = 0; i < this->enabled_channels.size(); i++) {
+        if (this->enabled_channels.at(i) == channel_id) {
+            found = true;
+            index = i;
+            break;
+        }
+    }
+
+    if (!found)
+        return;
+
+    this->enabled_channels.erase(this->enabled_channels.begin() + index);
+    this->update_channels_enabled();
+}
+
+/// The the specified channel to the specified state. Channel 0 is the start channel.
+void qutag_mc_communicator::SetChannelEnabled(chan_id channel_id, bool enabled)
+{
+    return (enabled) ? this->EnableChannel(channel_id) : this->DisableChannel(channel_id);
+}
+
+/// quTAG HR and only channel 0 (start) are supported. Return the sync divider
+/// rate on the specified channel. E.g. 8 means only every eighth time tag is
+/// passed to the computer.
 uint64_t qutag_mc_communicator::GetSyncDivider(chan_id channel_id)
 {
     if (this->device_type != DEVTYPE_QUTAG_HR)
@@ -213,19 +240,24 @@ uint64_t qutag_mc_communicator::GetSyncDivider(chan_id channel_id)
     return (uint64_t)divider;
 }
 
-chan_trigger_settings qutag_mc_communicator::UpdateSignalConditioning(uint64_t chan_ID, chan_trigger_settings new_values)
+/// quTAG HR only. Set the sync divider rate on the start channel. Only the
+/// values 1, 2, 4 or 8 are allowed. E.g. 8 means only every eighth time tag is
+/// passed to the computer.
+uint64_t qutag_mc_communicator::UpdateSyncDivider(uint64_t value)
 {
-    Bln32 edge = (new_values.edge == chan_trigger_settings::RISING) ? 1 : 0;
-    // Bln32 term = (new_values.terminate_in_signal_path) ? 1 : 0; // NOTE: the QuTAG device does not seem to support termination on/off
-    double threshold = new_values.voltage_threshold;
-    TDC_SignalCond cond = (new_values.signal_conditioning_enabled) ? SCOND_MISC : SCOND_LVTTL;
-    Int32 channel = (Int32)chan_ID;
+    if (this->device_type != DEVTYPE_QUTAG_HR)
+        return 1;
 
-    TDC_configureSignalConditioning(channel, cond, edge, threshold);
+    Int32 divider = value;
 
-    return this->GetSignalConditioning(chan_ID);
+    TDC_configureSyncDivider(divider, false);
+
+    return this->GetSyncDivider(0);
 }
 
+/// Return the trigger settings for the specified channel ID, where channel 0 is
+/// the start channel.  Returns a `chan_trigger_settings` instance, including
+/// the sync divider rate.
 chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan_ID)
 {
     Int32 chan = (Int32)chan_ID;
@@ -256,16 +288,23 @@ chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan
     return ret;
 }
 
-bool qutag_mc_communicator::ConnectedToDevice()
+/// Set the trigger settings for the specified channel. Trigger settings are
+/// supplied through a `chan_trigger_settings` object. Returns the resulting
+/// trigger settings as a new `chan_trigger_settings` object.
+chan_trigger_settings qutag_mc_communicator::UpdateSignalConditioning(uint64_t chan_ID, chan_trigger_settings new_values)
 {
-    return this->have_device;
+    Bln32 edge = (new_values.edge == chan_trigger_settings::RISING) ? 1 : 0;
+    // Bln32 term = (new_values.terminate_in_signal_path) ? 1 : 0; // NOTE: the QuTAG device does not seem to support termination on/off
+    double threshold = new_values.voltage_threshold;
+    TDC_SignalCond cond = (new_values.signal_conditioning_enabled) ? SCOND_MISC : SCOND_LVTTL;
+    Int32 channel = (Int32)chan_ID;
+
+    TDC_configureSignalConditioning(channel, cond, edge, threshold);
+
+    return this->GetSignalConditioning(chan_ID);
 }
 
-const std::string& qutag_mc_communicator::DeviceDescriptor() const
-{
-    return this->device_descriptor;
-}
-
+/// Return whether there has been any data loss.
 bool qutag_mc_communicator::DataLossSinceLastCall()
 {
     Bln32 ret = 1;
@@ -279,30 +318,25 @@ bool qutag_mc_communicator::DataLossSinceLastCall()
     return true;
 }
 
-double qutag_mc_communicator::TimeUnit() const
+/// Receive the latest timestamp data from the device and place the data into
+/// the `timestamps` and `chan_IDs` out-parameters. These are resized to number
+/// of returned time tags.  For maximum performance, ensure that the capacity of
+/// these vectors is at least `timestamp_buffer_size`.
+uint64_t qutag_mc_communicator::ReceiveData(std::vector<int64_t>* timestamps,
+                                     std::vector<uint8_t>* chan_IDs)
 {
-    double result = 0;
+    timestamps->resize(this->timestamp_buffer_size);
+    chan_IDs->resize(this->timestamp_buffer_size);
 
-    TDC_getTimebase(&result);
+    uint64_t num_valid_events = 0;
 
-    return result;
-}
+    TDC_getLastTimestamps(this->reset_buffer_after_event_retrieval,
+                          (int64_t*)&(*timestamps)[0],
+                          (Uint8*)&(*chan_IDs)[0],
+                          (Int32*)&num_valid_events);
 
-bool qutag_mc_communicator::Disconnect()
-{
-    TDC_deInit();
-    this->have_device = false;
+    timestamps->resize(num_valid_events);
+    chan_IDs->resize(num_valid_events);
 
-    return true;
-}
-
-uint64_t qutag_mc_communicator::GetNumDevicesConnected()
-{
-    if (this->have_device)
-        return 0;
-
-    uint64_t ret = 0;
-    int error_code = TDC_discover((unsigned int*)&ret);
-
-    return ret;
+    return num_valid_events;
 }
