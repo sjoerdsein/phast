@@ -57,13 +57,10 @@ private:
     const std::map<chan_id, chan_trigger_settings> original_chan_info;
     std::map<chan_id, chan_widgets> channels_widgets;
 
-    bool updating_prefs;
-
     qutag_mc_communicator* tt_comm;
 
     void init_ui_table();
     void add_channel_widgets(chan_trigger_settings chan_info);
-    void use_channel_prefs(chan_trigger_settings ci);
 
     void trigger_edge_changed(uint64_t chan_ID, int64_t combobox_index);
     void voltage_threshold_changed(uint64_t chan_ID, double new_val);

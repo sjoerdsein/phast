@@ -6,6 +6,7 @@
 #ifndef CHAN_TRIGGER_SETTINGS_H
 #define CHAN_TRIGGER_SETTINGS_H
 
+#include <QMetaType>
 #include <stdint.h>
 
 struct chan_trigger_settings
@@ -20,7 +21,9 @@ public:
     uint64_t sync_divider {1};
     int64_t delay_time {0}; // ps
     double voltage_threshold {-0.4}; // V
-    trigger_edge edge {RISING};
+    trigger_edge edge {FALLING};
 };
+
+Q_DECLARE_METATYPE(chan_trigger_settings::trigger_edge) // To allow use in a QVariant
 
 #endif // CHAN_TRIGGER_SETTINGS_H

@@ -4,8 +4,10 @@
 */
 
 #include "triggersettings_ui.h"
+#include <QVariant>
 #include "ui_triggersettings_ui.h"
 
+#include <bit>
 #include <iostream>
 
 #include "chan_trigger_settings.h"
@@ -14,10 +16,10 @@
 void triggersettings_ui::init_ui_table()
 {
     QLabel* lbl_chan = new QLabel("Channel no.", this);
-    QLabel* lbl_trigger_edge = new QLabel("Trigger edge", this);
     QLabel* lbl_threshold = new QLabel("Threshold (V)", this);
-    QLabel* lbl_divider = new QLabel("Sync divider", this);
     QLabel* lbl_delay_time = new QLabel("Delay time (ps)", this);
+    QLabel* lbl_trigger_edge = new QLabel("Trigger edge", this);
+    QLabel* lbl_divider = new QLabel("Sync divider", this);
 
     // Add the very first row
     // *Widget, row, column, rowspan, colspan
@@ -25,51 +27,61 @@ void triggersettings_ui::init_ui_table()
     this->ui->gridLayout->addWidget(lbl_threshold,    0, 1, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(lbl_delay_time,   0, 2, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(lbl_trigger_edge, 0, 3, 1, 1, Qt::AlignTop);
-    this->ui->gridLayout->addWidget(lbl_divider,      0, 4, 1, 1, Qt::AlignTop);
+    if (tt_comm->DeviceDescriptor() == "quTAG HR")
+        this->ui->gridLayout->addWidget(lbl_divider,  0, 4, 1, 1, Qt::AlignTop);
 }
 
 /// Add a new row with the ID supplied in `chan_info`
 void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
 {
+    std::string const & device_descriptor = tt_comm->DeviceDescriptor();
+
     // Define the widgets with their settings
     chan_widgets cw;
     cw.channel_number = chan_info.ID;
     cw.chan_num = new QLabel(QString::number(chan_info.ID), this);
 
+    // Input delay
     cw.delay_time = new QSpinBox(this);
-    cw.delay_time->setMinimum(INT_MIN);
-    cw.delay_time->setMaximum(INT_MAX);
-    cw.delay_time->setValue(0);
-    cw.delay_time->setEnabled(false);
+    if      (device_descriptor == "quTAG MC") { cw.delay_time->setRange(- 50000,   50000); }
+    else if (device_descriptor == "quTAG HR") { cw.delay_time->setRange(-100000,  100000); }
+    else                                      { cw.delay_time->setRange(INT_MIN, INT_MAX); }
+    cw.delay_time->setValue(chan_info.delay_time);
 
+    // Trigger edge direction
     cw.combo_trigger_edge = new QComboBox(this);
-    cw.combo_trigger_edge->addItem("Rising");
-    cw.combo_trigger_edge->addItem("Falling");
-    cw.combo_trigger_edge->setCurrentIndex(0);
+    cw.combo_trigger_edge->addItem("Rising", QVariant(chan_trigger_settings::RISING));
+    cw.combo_trigger_edge->addItem("Falling", QVariant(chan_trigger_settings::FALLING));
+    switch (chan_info.edge) {
+        case chan_trigger_settings::RISING:
+            cw.combo_trigger_edge->setCurrentIndex(0); break;
+        case chan_trigger_settings::FALLING:
+            cw.combo_trigger_edge->setCurrentIndex(1); break;
+    }
 
+    // Trigger threshold voltage
     cw.voltage_threshold = new QDoubleSpinBox(this);
-    cw.voltage_threshold->setMinimum(-10);
-    cw.voltage_threshold->setMaximum(10);
-    cw.voltage_threshold->setValue(0);
+    cw.voltage_threshold->setRange(-3.0, 3.0);
+    cw.voltage_threshold->setDecimals(4);
+    cw.voltage_threshold->setValue(chan_info.voltage_threshold);
 
+    // Sync divider (only on the start channel of quTAG HR)
+    bool sync_divider_supported = device_descriptor == "quTAG HR" && chan_info.ID == 0;
     cw.sync_divider = new QComboBox(this);
-    cw.sync_divider->addItem("1");
-    cw.sync_divider->addItem("2");
-    cw.sync_divider->addItem("4");
-    cw.sync_divider->addItem("8");
-    cw.sync_divider->setCurrentIndex(0);
-
-    if (chan_info.ID != 0) {
+    cw.sync_divider->addItems({"1", "2", "4", "8"});
+    cw.sync_divider->setCurrentIndex(std::bit_width(chan_info.sync_divider)-1);
+    if (not sync_divider_supported) {
         cw.sync_divider->setEnabled(false);
     }
 
-    // Add the labels to the grid
+    // Add the supported widgets to the grid
     int row = this->ui->gridLayout->rowCount() + 1;
     this->ui->gridLayout->addWidget(cw.chan_num,           row, 0, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(cw.voltage_threshold,  row, 1, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(cw.delay_time,         row, 2, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(cw.combo_trigger_edge, row, 3, 1, 1, Qt::AlignTop);
-    this->ui->gridLayout->addWidget(cw.sync_divider,       row, 4, 1, 1, Qt::AlignTop);
+    if (sync_divider_supported)
+        this->ui->gridLayout->addWidget(cw.sync_divider,   row, 4, 1, 1, Qt::AlignTop);
 
 
     this->channels_widgets[chan_info.ID] = cw;
@@ -87,34 +99,6 @@ void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
 
     connect(cw.sync_divider, QOverload<int>::of(&QComboBox::currentIndexChanged),
             [=, this](int index){this->sync_divider_changed(chan_info.ID, index);});
-}
-
-/// Update the channel widgets to correspond with the supplied trigger settings
-void triggersettings_ui::use_channel_prefs(chan_trigger_settings ci)
-{
-    chan_widgets cw = this->channels_widgets[ci.ID];
-
-    int index = -1;
-
-    if (ci.edge == chan_trigger_settings::RISING) {
-        index = cw.combo_trigger_edge->findText("Rising");
-    } else if (ci.edge == chan_trigger_settings::FALLING) {
-        index = cw.combo_trigger_edge->findText("Falling");
-    }
-
-    cw.combo_trigger_edge->setCurrentIndex(index);
-
-    cw.voltage_threshold->setValue(ci.voltage_threshold);
-
-    cw.delay_time->setValue(ci.delay_time);
-
-    if (ci.sync_divider == 1) {
-        index = cw.sync_divider->findText("1");
-    } else {
-        index = cw.sync_divider->findText("128");
-    }
-
-    cw.sync_divider->setCurrentIndex(index);
 }
 
 /// Create the UI for changing the trigger settings
@@ -141,18 +125,6 @@ triggersettings_ui::triggersettings_ui(QWidget *parent, qutag_mc_communicator *t
         // Enable the channels
         //this->tt_comm->EnableChannel(ci.ID);
     }
-
-
-
-    this->updating_prefs = true;
-
-    for (const auto &pair : this->chan_info) {
-        chan_trigger_settings ci = pair.second;
-
-        this->use_channel_prefs(ci);
-    }
-
-    this->updating_prefs = false;
 }
 
 /// Delete the UI for changing the trigger settings
@@ -162,52 +134,29 @@ triggersettings_ui::~triggersettings_ui()
 }
 
 /// Update the channel info when the trigger edge widget is updated
-void triggersettings_ui::trigger_edge_changed(uint64_t chan_ID, int64_t combobox_index)
+void triggersettings_ui::trigger_edge_changed(uint64_t chan_ID, int64_t /* combobox_index */)
 {
-    if (this->updating_prefs)
-        return;
-
-    chan_widgets cw = this->channels_widgets[chan_ID];
-
-    QString text = cw.combo_trigger_edge->currentText();
-
-    if (text == "Rising") {
-        this->chan_info[chan_ID].edge = chan_trigger_settings::RISING;
-    } else if (text == "Falling") {
-        this->chan_info[chan_ID].edge = chan_trigger_settings::FALLING;
-    }
+  chan_info[chan_ID].edge = channels_widgets[chan_ID]
+                                .combo_trigger_edge->currentData()
+                                .value<chan_trigger_settings::trigger_edge>();
 }
 
 /// Update the channel info when the voltage threshold widget is updated
 void triggersettings_ui::voltage_threshold_changed(uint64_t chan_ID, double new_val)
 {
-    if (this->updating_prefs)
-        return;
-
     this->chan_info[chan_ID].voltage_threshold = new_val;
 }
 
 /// Update the channel info when the delay time widget is updated
 void triggersettings_ui::delay_time_changed(uint64_t chan_ID, int new_val)
 {
-    if (this->updating_prefs)
-        return;
-
     this->chan_info[chan_ID].delay_time = new_val;
 }
 
 /// Update the channel info when the sync divider widget is updated
 void triggersettings_ui::sync_divider_changed(uint64_t chan_ID, int64_t combobox_index)
 {
-    if (this->updating_prefs)
-        return;
-
-    chan_widgets cw = this->channels_widgets[chan_ID];
-
-    QString text = cw.sync_divider->currentText();
-    int new_sync_val = text.toInt();
-
-    this->chan_info[chan_ID].sync_divider = new_sync_val;
+    this->chan_info[chan_ID].sync_divider = 1 << combobox_index;
 }
 
 /// Upload the selected trigger settings for channel `chan_ID` to the device
