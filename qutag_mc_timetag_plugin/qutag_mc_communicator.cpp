@@ -263,7 +263,6 @@ chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan
     Int32 chan = (Int32)chan_ID;
     Bln32 on = 0;
     Bln32 edge = 1;
-    //Bln32 term = 0;
     double threshold = 0;
 
     int error_val = TDC_getSignalConditioning(chan, &edge, &threshold);
@@ -274,7 +273,6 @@ chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan
     ret.ID = chan_ID;
     ret.edge = (edge == 0) ? chan_trigger_settings::FALLING : chan_trigger_settings::RISING;
     ret.signal_conditioning_enabled = on;
-    // ret.terminate_in_signal_path = term;
     ret.voltage_threshold = threshold;
 
     ret.delay_time = 0;
@@ -294,7 +292,6 @@ chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan
 chan_trigger_settings qutag_mc_communicator::UpdateSignalConditioning(uint64_t chan_ID, chan_trigger_settings new_values)
 {
     Bln32 edge = (new_values.edge == chan_trigger_settings::RISING) ? 1 : 0;
-    // Bln32 term = (new_values.terminate_in_signal_path) ? 1 : 0; // NOTE: the QuTAG device does not seem to support termination on/off
     double threshold = new_values.voltage_threshold;
     TDC_SignalCond cond = (new_values.signal_conditioning_enabled) ? SCOND_MISC : SCOND_LVTTL;
     Int32 channel = (Int32)chan_ID;

@@ -1,4 +1,5 @@
 /* Copyright (c) 2020 Stijn Hinterding, Utrecht University
+ * Modifications (c) 2025 Sjoerd Seinhorst, Utrecht University
  * This sofware is licensed under the MIT license (see the LICENSE file)
 */
 
@@ -14,19 +15,17 @@ void triggersettings_ui::init_ui_table()
 {
     QLabel* lbl_chan = new QLabel("Channel no.", this);
     QLabel* lbl_trigger_edge = new QLabel("Trigger edge", this);
-    QLabel* lbl_term_enabled = new QLabel("Termination enabled", this);
     QLabel* lbl_threshold = new QLabel("Threshold (V)", this);
     QLabel* lbl_divider = new QLabel("Sync divider", this);
     QLabel* lbl_delay_time = new QLabel("Delay time (ps)", this);
 
     // Add the very first row
     // *Widget, row, column, rowspan, colspan
-    this->ui->gridLayout->addWidget(lbl_chan, 0, 0, 1, 1, Qt::AlignTop);
-    this->ui->gridLayout->addWidget(lbl_threshold, 0, 1, 1, 1, Qt::AlignTop);
-    this->ui->gridLayout->addWidget(lbl_delay_time, 0, 2, 1, 1, Qt::AlignTop);
+    this->ui->gridLayout->addWidget(lbl_chan,         0, 0, 1, 1, Qt::AlignTop);
+    this->ui->gridLayout->addWidget(lbl_threshold,    0, 1, 1, 1, Qt::AlignTop);
+    this->ui->gridLayout->addWidget(lbl_delay_time,   0, 2, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(lbl_trigger_edge, 0, 3, 1, 1, Qt::AlignTop);
-    this->ui->gridLayout->addWidget(lbl_divider, 0, 4, 1, 1, Qt::AlignTop);
-    this->ui->gridLayout->addWidget(lbl_term_enabled, 0, 5, 1, 1, Qt::AlignTop);
+    this->ui->gridLayout->addWidget(lbl_divider,      0, 4, 1, 1, Qt::AlignTop);
 }
 
 /// Add a new row with the ID supplied in `chan_info`
@@ -48,10 +47,6 @@ void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
     cw.combo_trigger_edge->addItem("Falling");
     cw.combo_trigger_edge->setCurrentIndex(0);
 
-    cw.termination_enabled = new QCheckBox(this);
-    cw.termination_enabled->setCheckState(Qt::Unchecked);
-    cw.termination_enabled->setEnabled(false);
-
     cw.voltage_threshold = new QDoubleSpinBox(this);
     cw.voltage_threshold->setMinimum(-10);
     cw.voltage_threshold->setMaximum(10);
@@ -69,12 +64,11 @@ void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
 
     // Add the labels to the grid
     int row = this->ui->gridLayout->rowCount() + 1;
-    this->ui->gridLayout->addWidget(cw.chan_num, row, 0, 1, 1, Qt::AlignTop);
-    this->ui->gridLayout->addWidget(cw.voltage_threshold, row, 1, 1, 1, Qt::AlignTop);
-    this->ui->gridLayout->addWidget(cw.delay_time, row, 2, 1, 1, Qt::AlignTop);
+    this->ui->gridLayout->addWidget(cw.chan_num,           row, 0, 1, 1, Qt::AlignTop);
+    this->ui->gridLayout->addWidget(cw.voltage_threshold,  row, 1, 1, 1, Qt::AlignTop);
+    this->ui->gridLayout->addWidget(cw.delay_time,         row, 2, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(cw.combo_trigger_edge, row, 3, 1, 1, Qt::AlignTop);
-    this->ui->gridLayout->addWidget(cw.sync_divider, row, 4, 1, 1, Qt::AlignTop);
-    this->ui->gridLayout->addWidget(cw.termination_enabled, row, 5, 1, 1, Qt::AlignTop);
+    this->ui->gridLayout->addWidget(cw.sync_divider,       row, 4, 1, 1, Qt::AlignTop);
 
 
     this->channels_widgets[chan_info.ID] = cw;
@@ -82,10 +76,7 @@ void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
     // Connect the signals and the slots, to call the correct function when one
     // of the widgets updates
     connect(cw.combo_trigger_edge, QOverload<int>::of(&QComboBox::currentIndexChanged),
-        [=, this](int index){this->trigger_edge_changed(chan_info.ID, index);});
-
-    connect(cw.termination_enabled, &QCheckBox::stateChanged,
-            [=, this](int check_state){this->termination_enabled_changed(chan_info.ID, check_state);});
+            [=, this](int index){this->trigger_edge_changed(chan_info.ID, index);});
 
     connect(cw.voltage_threshold, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
             [=, this](double value){this->voltage_threshold_changed(chan_info.ID, value);});
@@ -114,9 +105,6 @@ void triggersettings_ui::use_channel_prefs(chan_trigger_settings ci)
 
     cw.combo_trigger_edge->setCurrentIndex(index);
 
-    cw.termination_enabled->setChecked(true);
-    cw.termination_enabled->setEnabled(false);
-
     cw.voltage_threshold->setValue(ci.voltage_threshold);
 
     cw.delay_time->setValue(ci.delay_time);
@@ -136,7 +124,6 @@ void triggersettings_ui::set_channel_conditioning_enabled(uint64_t chan_ID, bool
     chan_widgets cw = this->channels_widgets[chan_ID];
 
     cw.combo_trigger_edge->setEnabled(enabled);
-    cw.termination_enabled->setEnabled(enabled);
     cw.voltage_threshold->setEnabled(enabled);
 }
 
@@ -199,23 +186,6 @@ void triggersettings_ui::trigger_edge_changed(uint64_t chan_ID, int64_t combobox
     } else if (text == "Falling") {
         this->chan_info[chan_ID].edge = chan_trigger_settings::FALLING;
     }
-}
-
-/// Not relevant for quTAG MC. Update the channel info when termination widget
-/// is updated
-void triggersettings_ui::termination_enabled_changed(uint64_t chan_ID, int64_t check_state)
-{
-    return;
-    /*
-    if (this->updating_prefs)
-        return;
-
-    if (check_state == Qt::Checked) {
-        this->chan_info[chan_ID].terminate_in_signal_path = true;
-    } else {
-        this->chan_info[chan_ID].terminate_in_signal_path = false;
-    }
-    */
 }
 
 /// Update the channel info when the voltage threshold widget is updated

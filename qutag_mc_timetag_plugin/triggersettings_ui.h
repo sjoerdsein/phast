@@ -30,7 +30,6 @@ private:
         uint64_t channel_number;
         QLabel* chan_num;
         QComboBox* combo_trigger_edge;
-        QCheckBox* termination_enabled;
         QDoubleSpinBox* voltage_threshold;
         QComboBox* sync_divider;
         QSpinBox* delay_time;
@@ -68,7 +67,6 @@ private:
     void set_channel_conditioning_enabled(uint64_t chan_ID, bool enabled);
 
     void trigger_edge_changed(uint64_t chan_ID, int64_t combobox_index);
-    void termination_enabled_changed(uint64_t chan_ID, int64_t check_state);
     void voltage_threshold_changed(uint64_t chan_ID, double new_val);
     void delay_time_changed(uint64_t chan_ID, int new_val);
     void sync_divider_changed(uint64_t chan_ID, int64_t combobox_index);
