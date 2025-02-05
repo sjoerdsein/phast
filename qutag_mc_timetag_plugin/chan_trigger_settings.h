@@ -21,7 +21,6 @@ public:
     int64_t delay_time {0}; // ps
     double voltage_threshold {-0.4}; // V
     trigger_edge edge {RISING};
-    bool signal_conditioning_enabled {true};
 };
 
 #endif // CHAN_TRIGGER_SETTINGS_H

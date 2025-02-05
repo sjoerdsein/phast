@@ -51,6 +51,7 @@ void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
     cw.voltage_threshold->setMinimum(-10);
     cw.voltage_threshold->setMaximum(10);
     cw.voltage_threshold->setValue(0);
+
     cw.sync_divider = new QComboBox(this);
     cw.sync_divider->addItem("1");
     cw.sync_divider->addItem("2");
@@ -93,8 +94,6 @@ void triggersettings_ui::use_channel_prefs(chan_trigger_settings ci)
 {
     chan_widgets cw = this->channels_widgets[ci.ID];
 
-    this->set_channel_conditioning_enabled(ci.ID, ci.signal_conditioning_enabled);
-
     int index = -1;
 
     if (ci.edge == chan_trigger_settings::RISING) {
@@ -116,15 +115,6 @@ void triggersettings_ui::use_channel_prefs(chan_trigger_settings ci)
     }
 
     cw.sync_divider->setCurrentIndex(index);
-}
-
-/// Enable the widgets that are relevant for adjusting the channel conditioning
-void triggersettings_ui::set_channel_conditioning_enabled(uint64_t chan_ID, bool enabled)
-{
-    chan_widgets cw = this->channels_widgets[chan_ID];
-
-    cw.combo_trigger_edge->setEnabled(enabled);
-    cw.voltage_threshold->setEnabled(enabled);
 }
 
 /// Create the UI for changing the trigger settings

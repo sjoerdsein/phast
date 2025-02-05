@@ -64,7 +64,6 @@ private:
     void init_ui_table();
     void add_channel_widgets(chan_trigger_settings chan_info);
     void use_channel_prefs(chan_trigger_settings ci);
-    void set_channel_conditioning_enabled(uint64_t chan_ID, bool enabled);
 
     void trigger_edge_changed(uint64_t chan_ID, int64_t combobox_index);
     void voltage_threshold_changed(uint64_t chan_ID, double new_val);
