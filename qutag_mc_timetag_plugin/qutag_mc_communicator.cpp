@@ -263,6 +263,7 @@ chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan
     Int32 chan = (Int32)chan_ID;
     Bln32 edge = 1;
     double threshold = 0;
+    Int32 delay = 0;
 
     int error_val = TDC_getSignalConditioning(chan, &edge, &threshold);
 
@@ -273,7 +274,8 @@ chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan
     ret.edge = (edge == 0) ? chan_trigger_settings::FALLING : chan_trigger_settings::RISING;
     ret.voltage_threshold = threshold;
 
-    ret.delay_time = 0;
+    error_val = TDC_getChannelDelay(chan, &delay);
+    ret.delay_time = delay;
 
     if (chan_ID != 0) {
         ret.sync_divider = 1;
@@ -292,8 +294,10 @@ chan_trigger_settings qutag_mc_communicator::UpdateSignalConditioning(uint64_t c
     Bln32 edge = (new_values.edge == chan_trigger_settings::RISING) ? 1 : 0;
     double threshold = new_values.voltage_threshold;
     Int32 channel = (Int32)chan_ID;
+    Int32 delay = static_cast<Int32>(new_values.delay_time);
 
     TDC_configureSignalConditioning(channel, SCOND_MISC, edge, threshold);
+    TDC_setChannelDelay(channel, delay);
 
     return this->GetSignalConditioning(chan_ID);
 }

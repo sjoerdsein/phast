@@ -60,7 +60,7 @@ void Qutag_mc_timetag_plugin::DisableChan(chan_id ID)
 }
 
 /// There is no init dialog for this plugin
-void Qutag_mc_timetag_plugin::ShowInitDialog(QWidget *parent)
+void Qutag_mc_timetag_plugin::ShowInitDialog(QWidget * /* parent */)
 {
     return;
 }
@@ -69,10 +69,9 @@ void Qutag_mc_timetag_plugin::ShowInitDialog(QWidget *parent)
 void Qutag_mc_timetag_plugin::ShowTriggerSettingsUI(QWidget *parent, const std::vector<chan_id>& chan_IDs)
 {
     this->update_chan_settings_map(chan_IDs);
-
     triggersettings_ui ui(parent, this->comm, this->chan_settings);
-
     ui.exec();
+    chan_settings = ui.ChannelInfo();
 }
 
 /// Update the `chan_settings` member to contain exactly the channels listed in `active_channels`

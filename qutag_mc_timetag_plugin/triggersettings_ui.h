@@ -35,6 +35,8 @@ private:
         QSpinBox* delay_time;
     };
 
+    static constexpr double voltage_threshold_resolution = 0.15e-3;
+
 public:
     triggersettings_ui(const triggersettings_ui&) = delete;
     triggersettings_ui& operator=(const triggersettings_ui&) = delete;
@@ -54,7 +56,7 @@ private slots:
 private:
     Ui::triggersettings_ui *ui;
     std::map<chan_id, chan_trigger_settings> chan_info;
-    const std::map<chan_id, chan_trigger_settings> original_chan_info;
+    std::map<chan_id, chan_trigger_settings> original_chan_info;
     std::map<chan_id, chan_widgets> channels_widgets;
 
     qutag_mc_communicator* tt_comm;

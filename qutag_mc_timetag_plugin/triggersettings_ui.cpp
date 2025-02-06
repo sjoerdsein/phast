@@ -167,7 +167,14 @@ void triggersettings_ui::push_to_device(uint64_t chan_ID)
     chan_trigger_settings checked_val = this->tt_comm->UpdateSignalConditioning(chan_ID, this->chan_info[chan_ID]);
 
     std::cout << " got back from device: " << checked_val.voltage_threshold << " V" << std::endl;
+
+    // The actual voltage set by the device is slightly different than what we set it to. If the difference is small, ignore it
+    double const threshold_setpoint = chan_info[chan_ID].voltage_threshold;
+    double const threshold_difference = std::abs(checked_val.voltage_threshold - threshold_setpoint);
     this->chan_info[chan_ID] = checked_val;
+    if (threshold_difference < voltage_threshold_resolution) {
+        this->chan_info[chan_ID].voltage_threshold = threshold_setpoint;
+    }
 }
 
 /// Return the current channel info map (trigger settings for each channel)
@@ -179,27 +186,17 @@ const std::map<chan_id, chan_trigger_settings> &triggersettings_ui::ChannelInfo(
 /// When the Apply button is clicked, upload all trigger settings to the device
 void triggersettings_ui::on_btn_apply_clicked()
 {
-    for (auto pair : this->chan_info) {
-        chan_id id = pair.first;
-
+    for (auto const & [id, _] : chan_info) {
         this->push_to_device(id);
     }
+
+    original_chan_info = chan_info;
 }
 
-/// When the Cancel button is clicked, restore the previous channel info and
-/// upload this to the device
+/// When the Cancel button is clicked, restore the previous channel info
 void triggersettings_ui::on_btn_cancel_clicked()
 {
     this->chan_info = this->original_chan_info;
-
-    for (auto pair : this->chan_info) {
-        chan_id id = pair.first;
-
-        this->push_to_device(id);
-    }
-
-    this->chan_info = this->original_chan_info;
-
     this->setResult(QDialog::Rejected);
 }
 
@@ -207,7 +204,6 @@ void triggersettings_ui::on_btn_cancel_clicked()
 void triggersettings_ui::on_btn_OK_clicked()
 {
     this->on_btn_apply_clicked();
-
     this->setResult(QDialog::Accepted);
     this->close();
 }
