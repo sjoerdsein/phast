@@ -162,11 +162,11 @@ void triggersettings_ui::sync_divider_changed(uint64_t chan_ID, int64_t combobox
 /// Upload the selected trigger settings for channel `chan_ID` to the device
 void triggersettings_ui::push_to_device(uint64_t chan_ID)
 {
-    std::cout << "Setting threshold of channel " << chan_ID << " to " << this->chan_info[chan_ID].voltage_threshold << " V" << std::endl;
+    std::cout << "Setting threshold of channel " << chan_ID << " to " << this->chan_info[chan_ID].voltage_threshold << " V\n";
 
     chan_trigger_settings checked_val = this->tt_comm->UpdateSignalConditioning(chan_ID, this->chan_info[chan_ID]);
 
-    std::cout << " got back from device: " << checked_val.voltage_threshold << " V" << std::endl;
+    std::cout << "The device has set the threshold at " << checked_val.voltage_threshold << " V\n";
 
     // The actual voltage set by the device is slightly different than what we set it to. If the difference is small, ignore it
     double const threshold_setpoint = chan_info[chan_ID].voltage_threshold;

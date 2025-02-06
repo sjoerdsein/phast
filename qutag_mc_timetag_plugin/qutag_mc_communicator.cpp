@@ -4,6 +4,7 @@
 
 #include "qutag_mc_communicator.h"
 #include "qutag_mc_inc/tdcbase.h"
+#include "qutag_mc_inc/tdcdecl.h"
 #include "qutag_mc_inc/tdcmultidev.h"
 
 #include <phast_gui/support/photon_event.h>
@@ -71,7 +72,7 @@ bool qutag_mc_communicator::TryToConnect(int64_t device_ID)
     int rc = TDC_connect(device_ID);
 
     if (rc != TDC_Ok) {
-        printf("Could not connect to device. Error code: %i\n", rc);
+        std::cout << "Could not connect to device: " << TDC_perror(rc) << '\n';
         this->have_device = false;
         return false;
     } else {
@@ -267,7 +268,9 @@ chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan
 
     int error_val = TDC_getSignalConditioning(chan, &edge, &threshold);
 
-    std::cout << "qutag mc getSignalConditioning error value: " << error_val << std::endl;
+    if (error_val != TDC_Ok) {
+        std::cout << device_descriptor << " getSignalConditioning error: " << TDC_perror(error_val) << '\n';
+    }
 
     chan_trigger_settings ret;
     ret.ID = chan_ID;
