@@ -22,6 +22,8 @@ LIBS += -L$$PWD/qutag_mc_lib -ltdcbase
 win32:INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt-qt5"
 unix:INCLUDEPATH += $$[QT_INSTALL_PREFIX]"/include/qwt"
 
+unix:QMAKE_CXXFLAGS += -isystem $$[QT_INSTALL_HEADERS]
+
 # Also the qwt lib
 win32:LIBS += -lqwt-qt5
 unix:LIBS += -lqwt
