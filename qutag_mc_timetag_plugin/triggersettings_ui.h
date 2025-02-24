@@ -27,7 +27,7 @@ class triggersettings_ui : public QDialog
     Q_OBJECT
 private:
     struct chan_widgets {
-        uint64_t channel_number;
+        chan_id channel_number;
         QLabel* chan_num;
         QComboBox* combo_trigger_edge;
         QDoubleSpinBox* voltage_threshold;
@@ -64,12 +64,12 @@ private:
     void init_ui_table();
     void add_channel_widgets(chan_trigger_settings chan_info);
 
-    void trigger_edge_changed(uint64_t chan_ID, int64_t combobox_index);
-    void voltage_threshold_changed(uint64_t chan_ID, double new_val);
-    void delay_time_changed(uint64_t chan_ID, int new_val);
-    void sync_divider_changed(uint64_t chan_ID, int64_t combobox_index);
+    void trigger_edge_changed(chan_id chan_ID, int64_t combobox_index);
+    void voltage_threshold_changed(chan_id chan_ID, double new_val);
+    void delay_time_changed(chan_id chan_ID, int new_val);
+    void sync_divider_changed(chan_id chan_ID, int64_t combobox_index);
 
-    void push_to_device(uint64_t chan_ID);
+    void push_to_device(chan_id chan_ID);
 };
 
 #endif // TRIGGERSETTINGS_UI_H

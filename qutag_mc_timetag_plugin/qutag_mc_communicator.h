@@ -21,7 +21,7 @@ private:
     bool have_device;
     TDC_DevType device_type;
 
-    std::vector<uint64_t> enabled_channels;
+    std::vector<chan_id> enabled_channels;
 
     double time_unit_seconds;
     uint64_t timestamp_buffer_size;
@@ -54,8 +54,8 @@ public:
 
     virtual uint64_t GetSyncDivider(chan_id channel_id) override;
     virtual uint64_t UpdateSyncDivider(uint64_t value);
-    virtual chan_trigger_settings GetSignalConditioning(uint64_t chan_ID);
-    virtual chan_trigger_settings UpdateSignalConditioning(uint64_t chan_ID, chan_trigger_settings new_values);
+    virtual chan_trigger_settings GetSignalConditioning(chan_id chan_ID);
+    virtual chan_trigger_settings UpdateSignalConditioning(chan_id chan_ID, chan_trigger_settings new_values);
 
     virtual bool DataLossSinceLastCall() override;
     virtual uint64_t ReceiveData(std::vector<int64_t>* timestamps, std::vector<uint8_t>* channel_IDs) override;

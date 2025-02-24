@@ -1,4 +1,5 @@
 /* Copyright (c) 2020 Stijn Hinterding, Utrecht University
+ * Modifications (c) 2025 Sjoerd Seinhorst, Utrecht University
  * This sofware is licensed under the MIT license (see the LICENSE file)
 */
 
@@ -7,11 +8,13 @@
 #include "qutag_mc_inc/tdcdecl.h"
 #include "qutag_mc_inc/tdcmultidev.h"
 
+#include <algorithm>
 #include <phast_gui/support/photon_event.h>
 
 #include "chan_trigger_settings.h"
 
 #include <iostream>
+#include <vector>
 
 #define MAX_BUF_SIZE 1000000
 #define EXPOSURE_TIME 100       // in ms
@@ -148,8 +151,8 @@ uint64_t qutag_mc_communicator::GetNumDevicesConnected()
     if (this->have_device)
         return 0;
 
-    uint64_t ret = 0;
-    TDC_discover((unsigned int*)&ret);
+    unsigned int ret {};
+    TDC_discover(&ret);
 
     return ret;
 }
@@ -186,10 +189,9 @@ void qutag_mc_communicator::update_channels_enabled()
 /// Enable the specified channel. Channel 0 is the start channel.
 void qutag_mc_communicator::EnableChannel(chan_id channel_id)
 {
-    for (chan_id id : this->enabled_channels) {
-        if (id == channel_id)
-            return;
-    }
+    // Short circuit if already enabled
+    if (std::ranges::find(enabled_channels, channel_id) != enabled_channels.end())
+        return;
 
     this->enabled_channels.push_back(channel_id);
     this->update_channels_enabled();
@@ -198,22 +200,9 @@ void qutag_mc_communicator::EnableChannel(chan_id channel_id)
 /// Disable the specified channel. Channel 0 is the start channel.
 void qutag_mc_communicator::DisableChannel(chan_id channel_id)
 {
-    bool found = false;
-    uint64_t index = 0;
-
-    for (uint64_t i = 0; i < this->enabled_channels.size(); i++) {
-        if (this->enabled_channels.at(i) == channel_id) {
-            found = true;
-            index = i;
-            break;
-        }
+    if (std::erase(enabled_channels, channel_id)) {
+        this->update_channels_enabled();
     }
-
-    if (!found)
-        return;
-
-    this->enabled_channels.erase(this->enabled_channels.begin() + index);
-    this->update_channels_enabled();
 }
 
 /// The the specified channel to the specified state. Channel 0 is the start channel.
@@ -238,7 +227,7 @@ uint64_t qutag_mc_communicator::GetSyncDivider(chan_id channel_id)
 
     TDC_getSyncDivider(&divider, &reconstruct);
 
-    return (uint64_t)divider;
+    return static_cast<uint64_t>(divider);
 }
 
 /// quTAG HR only. Set the sync divider rate on the start channel. Only the
@@ -259,9 +248,9 @@ uint64_t qutag_mc_communicator::UpdateSyncDivider(uint64_t value)
 /// Return the trigger settings for the specified channel ID, where channel 0 is
 /// the start channel.  Returns a `chan_trigger_settings` instance, including
 /// the sync divider rate.
-chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan_ID)
+chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(chan_id chan_ID)
 {
-    Int32 chan = (Int32)chan_ID;
+    Int32 chan = static_cast<Int32>(chan_ID);
     Bln32 edge = 1;
     double threshold = 0;
     Int32 delay = 0;
@@ -274,7 +263,7 @@ chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan
 
     chan_trigger_settings ret;
     ret.ID = chan_ID;
-    ret.edge = (edge == 0) ? chan_trigger_settings::FALLING : chan_trigger_settings::RISING;
+    ret.edge = static_cast<chan_trigger_settings::trigger_edge>(edge);
     ret.voltage_threshold = threshold;
 
     error_val = TDC_getChannelDelay(chan, &delay);
@@ -284,19 +273,19 @@ chan_trigger_settings qutag_mc_communicator::GetSignalConditioning(uint64_t chan
         ret.sync_divider = 1;
     } else {
         ret.sync_divider = this->GetSyncDivider(0);
-
     }
+
     return ret;
 }
 
 /// Set the trigger settings for the specified channel. Trigger settings are
 /// supplied through a `chan_trigger_settings` object. Returns the resulting
 /// trigger settings as a new `chan_trigger_settings` object.
-chan_trigger_settings qutag_mc_communicator::UpdateSignalConditioning(uint64_t chan_ID, chan_trigger_settings new_values)
+chan_trigger_settings qutag_mc_communicator::UpdateSignalConditioning(chan_id chan_ID, chan_trigger_settings new_values)
 {
-    Bln32 edge = (new_values.edge == chan_trigger_settings::RISING) ? 1 : 0;
+    Bln32 edge = static_cast<Bln32>(new_values.edge);
     double threshold = new_values.voltage_threshold;
-    Int32 channel = (Int32)chan_ID;
+    Int32 channel = static_cast<Int32>(chan_ID);
     Int32 delay = static_cast<Int32>(new_values.delay_time);
 
     TDC_configureSignalConditioning(channel, SCOND_MISC, edge, threshold);
@@ -324,17 +313,17 @@ bool qutag_mc_communicator::DataLossSinceLastCall()
 /// of returned time tags.  For maximum performance, ensure that the capacity of
 /// these vectors is at least `timestamp_buffer_size`.
 uint64_t qutag_mc_communicator::ReceiveData(std::vector<int64_t>* timestamps,
-                                     std::vector<uint8_t>* chan_IDs)
+                                            std::vector<uint8_t>* chan_IDs)
 {
     timestamps->resize(this->timestamp_buffer_size);
     chan_IDs->resize(this->timestamp_buffer_size);
 
-    uint64_t num_valid_events = 0;
+    Int32 num_valid_events = 0;
 
     TDC_getLastTimestamps(this->reset_buffer_after_event_retrieval,
-                          (int64_t*)&(*timestamps)[0],
-                          (Uint8*)&(*chan_IDs)[0],
-                          (Int32*)&num_valid_events);
+                          timestamps->data(),
+                          chan_IDs->data(),
+                          &num_valid_events);
 
     timestamps->resize(num_valid_events);
     chan_IDs->resize(num_valid_events);

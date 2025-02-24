@@ -117,9 +117,7 @@ triggersettings_ui::triggersettings_ui(QWidget *parent, qutag_mc_communicator *t
     this->init_ui_table();
 
     // Add the file info
-    for (const auto &pair : this->chan_info) {
-        chan_trigger_settings ci = pair.second;
-
+    for (auto const & [id, ci] : this->chan_info) {
         this->add_channel_widgets(ci);
 
         // Enable the channels
@@ -134,7 +132,7 @@ triggersettings_ui::~triggersettings_ui()
 }
 
 /// Update the channel info when the trigger edge widget is updated
-void triggersettings_ui::trigger_edge_changed(uint64_t chan_ID, int64_t /* combobox_index */)
+void triggersettings_ui::trigger_edge_changed(chan_id chan_ID, int64_t /* combobox_index */)
 {
   chan_info[chan_ID].edge = channels_widgets[chan_ID]
                                 .combo_trigger_edge->currentData()
@@ -142,25 +140,25 @@ void triggersettings_ui::trigger_edge_changed(uint64_t chan_ID, int64_t /* combo
 }
 
 /// Update the channel info when the voltage threshold widget is updated
-void triggersettings_ui::voltage_threshold_changed(uint64_t chan_ID, double new_val)
+void triggersettings_ui::voltage_threshold_changed(chan_id chan_ID, double new_val)
 {
     this->chan_info[chan_ID].voltage_threshold = new_val;
 }
 
 /// Update the channel info when the delay time widget is updated
-void triggersettings_ui::delay_time_changed(uint64_t chan_ID, int new_val)
+void triggersettings_ui::delay_time_changed(chan_id chan_ID, int new_val)
 {
     this->chan_info[chan_ID].delay_time = new_val;
 }
 
 /// Update the channel info when the sync divider widget is updated
-void triggersettings_ui::sync_divider_changed(uint64_t chan_ID, int64_t combobox_index)
+void triggersettings_ui::sync_divider_changed(chan_id chan_ID, int64_t combobox_index)
 {
     this->chan_info[chan_ID].sync_divider = 1 << combobox_index;
 }
 
 /// Upload the selected trigger settings for channel `chan_ID` to the device
-void triggersettings_ui::push_to_device(uint64_t chan_ID)
+void triggersettings_ui::push_to_device(chan_id chan_ID)
 {
     std::cout << "Setting threshold of channel " << chan_ID << " to " << this->chan_info[chan_ID].voltage_threshold << " V\n";
 
