@@ -54,7 +54,7 @@ ITimeTaggerCommunicator* Qutag_mc_timetag_plugin::GetComm() const
 }
 
 /// NOT IMPLEMENTED! Disable a channel by `ID`
-void Qutag_mc_timetag_plugin::DisableChan(chan_id ID)
+void Qutag_mc_timetag_plugin::DisableChan(chan_id /* ID */)
 {
     //this->comm->DisableChannel(ID);
 }

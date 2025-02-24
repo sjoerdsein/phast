@@ -105,8 +105,8 @@ bool qutag_mc_communicator::TryToConnect(int64_t device_ID)
 
     TDC_setTimestampBufferSize(this->timestamp_buffer_size);
 
-    // By default we enable ALL channels
-    TDC_enableChannels(true, 0xFF);
+    // By default we disable ALL channels
+    SetEnabledChannels({});
 
     // We can also set a 'sync divider'. This tells
     // the timetagger box to skip every n-th event in
@@ -177,13 +177,18 @@ const std::string& qutag_mc_communicator::DeviceDescriptor() const
 /// member variable. The start channel is always enabled.
 void qutag_mc_communicator::update_channels_enabled()
 {
-    int32_t channels_mask = 0;
+    Bln32 enable_start = false;
+    uint32_t channels_mask = 0;
 
     for (chan_id id : this->enabled_channels) {
-        channels_mask &= id;
+        if (id == 0) {
+            enable_start = true;
+        } else {
+            channels_mask |= 1u << (id - 1);
+        }
     }
 
-    TDC_enableChannels(true, channels_mask);  // TODO Should enStart always be true?
+    TDC_enableChannels(enable_start, channels_mask);
 }
 
 /// Enable the specified channel. Channel 0 is the start channel.
@@ -209,6 +214,16 @@ void qutag_mc_communicator::DisableChannel(chan_id channel_id)
 void qutag_mc_communicator::SetChannelEnabled(chan_id channel_id, bool enabled)
 {
     return (enabled) ? this->EnableChannel(channel_id) : this->DisableChannel(channel_id);
+}
+
+void qutag_mc_communicator::SetEnabledChannels(std::vector<chan_id> const & channels)
+{
+    chan_id const max_chan_id = TDC_getChannelCount() - 1;
+
+    // Filter out invalid channels
+    enabled_channels.clear();
+    std::ranges::copy_if( channels, std::back_inserter(enabled_channels), [max_chan_id](unsigned c) { return c <= max_chan_id; });
+    update_channels_enabled();
 }
 
 /// quTAG HR and only channel 0 (start) are supported. Return the sync divider

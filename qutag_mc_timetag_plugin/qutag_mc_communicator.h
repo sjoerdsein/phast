@@ -1,4 +1,5 @@
 /* Copyright (c) 2020 Stijn Hinterding, Utrecht University
+ * Modifications (c) 2025 Sjoerd Seinhorst, Utrecht University
  * This sofware is licensed under the MIT license (see the LICENSE file)
 */
 
@@ -38,6 +39,8 @@ private:
     // void check_for_events();
 
 public:
+    virtual void SetEnabledChannels(std::vector<chan_id> const & channels);
+
     explicit qutag_mc_communicator(uint64_t buffer_size=1000000);
     virtual ~qutag_mc_communicator() override;
 

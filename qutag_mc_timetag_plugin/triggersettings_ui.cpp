@@ -119,9 +119,6 @@ triggersettings_ui::triggersettings_ui(QWidget *parent, qutag_mc_communicator *t
     // Add the file info
     for (auto const & [id, ci] : this->chan_info) {
         this->add_channel_widgets(ci);
-
-        // Enable the channels
-        //this->tt_comm->EnableChannel(ci.ID);
     }
 }
 
@@ -184,10 +181,21 @@ const std::map<chan_id, chan_trigger_settings> &triggersettings_ui::ChannelInfo(
 /// When the Apply button is clicked, upload all trigger settings to the device
 void triggersettings_ui::on_btn_apply_clicked()
 {
+    // Disable all channels just to be sure
+    tt_comm->SetEnabledChannels({});
+
+    // Update settings
+    std::vector<chan_id> enabled_channels {};
+    enabled_channels.reserve(chan_info.size());
     for (auto const & [id, _] : chan_info) {
         this->push_to_device(id);
+        enabled_channels.push_back(id);
     }
 
+    // Enable the selected channels
+    tt_comm->SetEnabledChannels(enabled_channels);
+
+    // Update the old settings map, because new settings were accepted
     original_chan_info = chan_info;
 }
 
