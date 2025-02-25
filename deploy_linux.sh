@@ -13,6 +13,7 @@ plugins=("decaycurve_view_plugin" "correlation_view_plugin" "fake_timetag_device
 # Get executable
 mkdir -p ${deployDir}
 cp ${buildDir}/${appProjectName}/${appName} ${deployDir}
+strip ${deployDir}${appName}
 
 # Let's ignore the regular dependencies for now...
 
@@ -23,6 +24,7 @@ mkdir -p ${deployDir}/plugins
 for pl in "${plugins[@]}"
 do
     cp ${buildDir}/${pl}/lib${pl}.so ${deployDir}/plugins/
+    strip ${deployDir}/plugins/lib${pl}.so
 
     # Ignore plugin dependencies for now...
 done
@@ -32,16 +34,22 @@ done
 mkdir -p ${deployDir}/qutag_mc_plugin
 cp ./qutag_mc_timetag_plugin/qutag_mc_lib/libtdcbase.so ${deployDir}/qutag_mc_plugin/
 cp ${buildDir}/qutag_mc_timetag_plugin/libqutag_mc_timetag_plugin.so ${deployDir}/qutag_mc_plugin/
+strip ${deployDir}/qutag_mc_plugin/libtdcbase.so
+strip ${deployDir}/qutag_mc_plugin/libqutag_mc_timetag_plugin.so
 
 # # Copy quTAG plugin: not supported on Linux
 # mkdir -p ${deployDir}/qutag_plugin
 # cp ./qutag_timetag_plugin/qutag_lib/libtdcbase.so ${deployDir}/qutag_plugin/
 # cp ${buildDir}/qutag_timetag_plugin/libqutag_timetag_plugin.so ${deployDir}/qutag_plugin/
+# strip ${deployDir}/qutag_plugin/libtdcbase.so
+# strip ${deployDir}/qutag_plugin/libqutag_timetag_plugin.so
 
 # # Copy quTAU plugin: not supported on Linux
 # mkdir -p ${deployDir}/qutau_plugin
 # cp ./qutau_timetag_plugin/qutau_lib/libtdcbase.so ${deployDir}/qutau_plugin/
 # cp ${buildDir}/qutau_timetag_plugin/libqutau_timetag_plugin.so ${deployDir}/qutau_plugin/
+# strip ${deployDir}/qutau_plugin/libtdcbase.so
+# strip ${deployDir}/qutau_plugin/libqutau_timetag_plugin.so
 
 # Create shortcut files to start using qutag or qutau plugins
 echo "./phast -P qutag_mc_plugin" > ${deployDir}phast_qutag_mc
