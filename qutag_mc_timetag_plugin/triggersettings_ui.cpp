@@ -27,14 +27,14 @@ void triggersettings_ui::init_ui_table()
     this->ui->gridLayout->addWidget(lbl_threshold,    0, 1, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(lbl_delay_time,   0, 2, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(lbl_trigger_edge, 0, 3, 1, 1, Qt::AlignTop);
-    if (tt_comm->DeviceDescriptor() == "quTAG HR")
+    if (tt_comm->DeviceType() == DEVTYPE_QUTAG_HR)
         this->ui->gridLayout->addWidget(lbl_divider,  0, 4, 1, 1, Qt::AlignTop);
 }
 
 /// Add a new row with the ID supplied in `chan_info`
 void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
 {
-    std::string const & device_descriptor = tt_comm->DeviceDescriptor();
+    TDC_DevType device_type = tt_comm->DeviceType();
 
     // Define the widgets with their settings
     chan_widgets cw;
@@ -43,8 +43,8 @@ void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
 
     // Input delay
     cw.delay_time = new QSpinBox(this);
-    if      (device_descriptor == "quTAG MC") { cw.delay_time->setRange(- 50000,   50000); }
-    else if (device_descriptor == "quTAG HR") { cw.delay_time->setRange(-100000,  100000); }
+    if      (device_type == DEVTYPE_QUTAG_MC) { cw.delay_time->setRange(- 50000,   50000); }
+    else if (device_type == DEVTYPE_QUTAG_HR) { cw.delay_time->setRange(-100000,  100000); }
     else                                      { cw.delay_time->setRange(INT_MIN, INT_MAX); }
     cw.delay_time->setValue(chan_info.delay_time);
 
@@ -66,7 +66,7 @@ void triggersettings_ui::add_channel_widgets(chan_trigger_settings chan_info)
     cw.voltage_threshold->setValue(chan_info.voltage_threshold);
 
     // Sync divider (only on the start channel of quTAG HR)
-    bool sync_divider_supported = device_descriptor == "quTAG HR" && chan_info.ID == 0;
+    bool sync_divider_supported = device_type == DEVTYPE_QUTAG_HR && chan_info.ID == 0;
     cw.sync_divider = new QComboBox(this);
     cw.sync_divider->addItems({"1", "2", "4", "8"});
     cw.sync_divider->setCurrentIndex(std::bit_width(chan_info.sync_divider)-1);

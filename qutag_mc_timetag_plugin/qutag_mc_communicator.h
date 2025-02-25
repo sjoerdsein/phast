@@ -53,6 +53,7 @@ public:
     virtual uint64_t GetNumDevicesConnected() override;
     virtual double TimeUnit() const override;
     virtual const std::string& DeviceDescriptor() const override;
+    virtual TDC_DevType DeviceType() const;
     // bool DevicePresent() const;
 
     virtual uint64_t GetSyncDivider(chan_id channel_id) override;

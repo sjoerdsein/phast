@@ -173,6 +173,12 @@ const std::string& qutag_mc_communicator::DeviceDescriptor() const
     return this->device_descriptor;
 }
 
+/// Return the device type enum
+TDC_DevType qutag_mc_communicator::DeviceType() const
+{
+    return device_type;
+}
+
 /// Set the channels enabled on the device according to the `enabled_channels`
 /// member variable. The start channel is always enabled.
 void qutag_mc_communicator::update_channels_enabled()
