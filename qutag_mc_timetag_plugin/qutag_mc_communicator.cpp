@@ -318,15 +318,9 @@ chan_trigger_settings qutag_mc_communicator::UpdateSignalConditioning(chan_id ch
 /// Return whether there has been any data loss.
 bool qutag_mc_communicator::DataLossSinceLastCall()
 {
-    Bln32 ret = 1;
-    Bln32 ret2 = 1;
+    Bln32 ret = true;
     TDC_getDataLost(&ret);
-    TDC_getDataLost(&ret2);
-
-    if (ret == 0 && ret2 == 0)
-        return false;
-
-    return true;
+    return ret;
 }
 
 /// Receive the latest timestamp data from the device and place the data into
