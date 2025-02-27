@@ -32,13 +32,13 @@ QString Qutag_mc_timetag_plugin::TimeTagPluginName() const
 /// Return this plugin descriptor
 QString Qutag_mc_timetag_plugin::TimeTagPluginDescriptor() const
 {
-    return "plugin to communicate with qutools quTAG MC devices";
+    return "plugin to communicate with qutools quTAG MC/HR devices";
 }
 
 /// Return the menu label text
 QString Qutag_mc_timetag_plugin::TimeTagMenuDescriptor() const
 {
-    return "quTAG MC trigger settings";
+    return "quTAG MC/HR trigger settings";
 }
 
 /// This plugin has a settings menu
