@@ -1,10 +1,12 @@
 /* Copyright (c) 2020 Stijn Hinterding, Utrecht University
- * This sofware is licensed under the MIT license (see the LICENSE file)	
+ * Modifications (c) 2025 Sjoerd Seinhorst, Utrecht University
+ * This sofware is licensed under the MIT license (see the LICENSE file)
 */
 
 #include "base_view_plot.h"
 #include "ui_base_view_plot.h"
 
+#include "../interfaces/itimetracesync.h"
 #include "../interfaces/itempdatastorage.h"
 
 #include <iostream>
@@ -107,6 +109,23 @@ void base_view_plot::init_calcs()
 
             this->calcs.push_back(calc);
             connect(calc, &Base_ui_calc::new_data, this->view, &DataView::on_new_data, Qt::QueuedConnection);
+            connect(calc, &Base_ui_calc::new_data, [this]{
+                int64_t global_first_bin_lower = INT64_MAX;
+
+                for (Base_ui_calc const * c : calcs) {
+                    auto ttc = dynamic_cast<ITimeTraceSync const *>(c);
+                    if (ttc and ttc->ready_for_sync()) {
+                        global_first_bin_lower = std::min(global_first_bin_lower, ttc->get_sync_parameter());
+                    }
+                }
+
+                for (Base_ui_calc * c : calcs) {
+                    auto ttc = dynamic_cast<ITimeTraceSync *>(c);
+                    if (ttc and ttc->ready_for_sync()) {
+                        ttc->apply_sync_parameter(global_first_bin_lower);
+                    }
+                }
+            });
 
             this->storage->AddListener(calc);
         }

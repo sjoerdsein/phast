@@ -125,6 +125,7 @@ HEADERS += \
     interfaces/idataplot.h \
     interfaces/idatawindow.h \
     interfaces/idatawindowstub.h \
+    interfaces/itimetracesync.h \
     support/dataview.h \
     support/global.h \
     interfaces/ifilewriter.h \

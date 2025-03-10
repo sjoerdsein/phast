@@ -1,4 +1,5 @@
 /* Copyright (c) 2020 Stijn Hinterding, Utrecht University
+ * Modifications (c) 2025 Sjoerd Seinhorst, Utrecht University
  * This sofware is licensed under the MIT license (see the LICENSE file)	
 */
 
@@ -184,4 +185,19 @@ DataView::data_update timetrace_calc::arrange_update(DetectionUpdate event, bool
     ret.ys = ys2;
 
     return ret;
+}
+
+bool timetrace_calc::ready_for_sync() const
+{
+    return not first_time;
+}
+
+int64_t timetrace_calc::get_sync_parameter() const
+{
+    return first_bin_lower;
+}
+
+void timetrace_calc::apply_sync_parameter(int64_t new_first_bin_lower)
+{
+    first_bin_lower = new_first_bin_lower;
 }
