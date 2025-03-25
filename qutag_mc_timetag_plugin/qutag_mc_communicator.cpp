@@ -343,5 +343,9 @@ uint64_t qutag_mc_communicator::ReceiveData(std::vector<int64_t>* timestamps,
     timestamps->resize(num_valid_events);
     chan_IDs->resize(num_valid_events);
 
+    for (uint8_t & c : *chan_IDs) {
+        c += 1;
+    }
+
     return num_valid_events;
 }
