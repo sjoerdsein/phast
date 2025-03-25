@@ -21,6 +21,9 @@ appchannelinfo_form::appchannelinfo_form(QWidget *parent) :
     this->ret.num_dependent_chans = 0;
 
     ui->setupUi(this);
+
+    ui->spinBox->setFocus();
+    ui->spinBox->selectAll();
 }
 
 appchannelinfo_form::~appchannelinfo_form()
