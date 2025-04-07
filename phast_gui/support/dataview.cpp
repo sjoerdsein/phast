@@ -1,13 +1,16 @@
 /* Copyright (c) 2020 Stijn Hinterding, Utrecht University
- * This sofware is licensed under the MIT license (see the LICENSE file)	
+ * Modifications (c) 2025 Sjoerd Seinhorst, Utrecht University
+ * This sofware is licensed under the MIT license (see the LICENSE file)
 */
 
 #include "dataview.h"
 
 #include "plotparams.h"
 #include "mainplot.h"
+#include "colormanager.h"
 
 #include <QTimer>
+#include <QPen>
 #ifdef TT_USE_BASE_QWT
 #include <qwt/qwt_plot_curve.h>
 #else
@@ -16,6 +19,10 @@
 
 DataView::~DataView()
 {
+    ColorManager & cm = ColorManager::instance();
+    for (auto const [_, curve] : chan_curves) {
+        cm.release_color(curve->pen().color());
+    }
 }
 
 DataView::DataView(MainPlot* plot, double linewidth, QwtPlotCurve::CurveStyle pen_style) :
@@ -28,15 +35,9 @@ DataView::DataView(MainPlot* plot, double linewidth, QwtPlotCurve::CurveStyle pe
     keep_y_const_size(false),
     x_const_size(0.0),
     y_const_size(0.0),
-    chan_colors(),
     linewidth(linewidth),
     pen_style(pen_style)
 {
-    chan_colors.push_back(Qt::yellow);
-    chan_colors.push_back(Qt::cyan);
-    chan_colors.push_back(Qt::magenta);
-    chan_colors.push_back(Qt::green);
-
     plot_params temp_p;
     temp_p.keep_x_const_size = false;
     temp_p.keep_y_const_size = false;
@@ -60,13 +61,7 @@ QwtPlotCurve* DataView::make_new_curve(int64_t chan_num)
 {
     QwtPlotCurve* c = new QwtPlotCurve(QString::number(chan_num));
 
-    QColor col;
-    if (chan_num >= this->chan_colors.size() ||
-            chan_num < 0) {
-        col = Qt::white;
-    } else {
-        col = this->chan_colors[chan_num];
-    }
+    QColor const col = ColorManager::instance().allocate_color();
 
     c->setPen(col, 1.2);
     c->setStyle(this->pen_style);

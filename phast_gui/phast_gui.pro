@@ -51,6 +51,7 @@ SOURCES += \
     impl/nonpulsechandata.cpp \
     impl/pulsechandata.cpp \
     impl/writer_listeners.cpp \
+    support/colormanager.cpp \
     support/customscaledraw.cpp \
     support/mainplot.cpp \
     support/qutau_filereader.cpp \
@@ -93,6 +94,7 @@ HEADERS += \
     interfaces/isettingscontainer.h \
     interfaces/itempdatastorage.h \
     interfaces/itimetaggercommunicator.h \
+    support/colormanager.h \
     support/customscaledraw.h \
     support/detectionupdate.h \
     support/lockfreequeue.h \
@@ -137,7 +139,6 @@ FORMS += \
     timetagger_infoscreen.ui \
     appchannelinfo_form.ui \
     qutau_fileimport_dialog.ui \
-    appchannelinfo_form.ui \
     offline_online_dialog.ui \
     widgetplotsettings.ui \
     online_datasaving_ui.ui \

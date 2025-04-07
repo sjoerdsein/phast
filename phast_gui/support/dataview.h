@@ -49,7 +49,6 @@ private:
     plot_params p;
     std::map<int64_t, QwtPlotCurve*> chan_curves;
 
-    std::vector<QColor> chan_colors;
     double linewidth;
     QwtPlotCurve::CurveStyle pen_style;
 
