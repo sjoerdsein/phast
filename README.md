@@ -7,7 +7,7 @@ PHoton Arrival-time STudio (PHAST) is a GUI application for time-correlated sing
 Screenshot of PHAST in action, showcasing live intensity-trace, decay-curve, and correlation-curve displays.
 
 ## Supported hardware
-PHAST has been developed for use with quTools' [quTAU](https://www.qutools.com/quTAU/) and [quTAG](https://www.qutools.com/quTAG/). These time taggers should work out of the box. If your use case is different than ours, it may be that you run into bugs---please file a bug report on github.
+PHAST has been developed for use with quTools' [quTAU](https://www.qutools.com/quTAU/), [quTAG](https://www.qutools.com/quTAG/) and [quTAG MC](https://www.qutools.com/quTAG-MC/). These time taggers should work out of the box. If your use case is different than ours, it may be that you run into bugs---please file a bug report on github.
 
 ## Other hardware
 Other TDCs (e.g. PicoQuant's HydraHarp) are currently not supported, and PHAST will not be able to work with these. However, PHAST is a modular application, and support for individual TDC-types is added via plugins. It should thus be relatively straightforward to add support for more hardware.
