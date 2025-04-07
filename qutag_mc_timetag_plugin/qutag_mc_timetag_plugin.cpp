@@ -26,7 +26,7 @@ Qutag_mc_timetag_plugin::~Qutag_mc_timetag_plugin()
 /// Return this plugin name
 QString Qutag_mc_timetag_plugin::TimeTagPluginName() const
 {
-    return "Qutag_mc_timetag_plugin";
+    return "qutag_mc_timetag_plugin";
 }
 
 /// Return this plugin descriptor

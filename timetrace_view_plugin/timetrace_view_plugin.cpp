@@ -23,7 +23,7 @@ QString Timetrace_view_plugin::DataviewPluginDescriptor() const
 
 QString Timetrace_view_plugin::DataviewMenuDescriptor() const
 {
-    return "intensity trace";
+    return "Intensity trace";
 }
 
 bool Timetrace_view_plugin::HandlesOnlyMicrotimeChans() const

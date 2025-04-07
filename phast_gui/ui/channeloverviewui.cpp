@@ -296,19 +296,19 @@ void ChannelOverviewUI::pulses_chan_changed(uint64_t sending_chan_num, int64_t c
 
     chan_widgets cw_sender = this->channels_widgets[sending_chan_num];
 
-     uint64_t target_index = cw_sender.combo->currentText().toULongLong();
+    uint64_t target_index = cw_sender.combo->currentText().toULongLong();
 
     // Check if we changed from pulsing channel
-     if (this->chan_info.at(sending_chan_num).has_pulses_channel) {
-         // We changed pulsing channel.
-         uint64_t prev_pulses = this->chan_info[sending_chan_num].corresponding_pulses_channel;
+    if (this->chan_info.at(sending_chan_num).has_pulses_channel) {
+        // We changed pulsing channel.
+        uint64_t prev_pulses = this->chan_info[sending_chan_num].corresponding_pulses_channel;
 
-         this->chan_info[prev_pulses].num_dependent_chans -= 1;
+        this->chan_info[prev_pulses].num_dependent_chans -= 1;
 
-         if (this->chan_info[prev_pulses].num_dependent_chans == 0) {
-             this->set_channel_as_pulses_channel(prev_pulses, false);
-         }
-     }
+        if (this->chan_info[prev_pulses].num_dependent_chans == 0) {
+            this->set_channel_as_pulses_channel(prev_pulses, false);
+        }
+    }
 
     if (combobox_index == 0) {
         // We don't have a pulses channel any more
