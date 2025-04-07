@@ -155,10 +155,10 @@ void base_view_plot::on_new_temp_data_storage(ITempDataStorage *storage)
         return;
 
     for (Base_ui_calc* l : this->calcs) {
-        l->clear_data();
-
-        this->data_displayed = false;
-
+        // TODO: A calc of a deleted channel will not receive new data but it
+        // will keep updating the plot data, which is a waste of resources.
+        // Therefore, if possible, detect these calcs and do not add their
+        // listeners
         storage->AddListener(l);
     }
 }

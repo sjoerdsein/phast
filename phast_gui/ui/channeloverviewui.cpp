@@ -1,5 +1,6 @@
 /* Copyright (c) 2020 Stijn Hinterding, Utrecht University
- * This sofware is licensed under the MIT license (see the LICENSE file)	
+ * Modifications (c) 2025 Sjoerd Seinhorst, Utrecht University
+ * This sofware is licensed under the MIT license (see the LICENSE file)
 */
 
 #include "channeloverviewui.h"
@@ -13,6 +14,7 @@
 #include <QComboBox>
 #include <QtGlobal>
 #include <QMessageBox>
+#include <QToolButton>
 
 #ifdef TT_USE_BASE_QWT
 #include <qwt/qwt_counter.h>
@@ -26,6 +28,7 @@ void ChannelOverviewUI::init_ui_table()
     QLabel* lbl_is_pulses_channel = new QLabel("Is pulses?", this);
     QLabel* lbl_pulses_channel = new QLabel("Pulses chan.", this);
     QLabel* lbl_additional_sync_div = new QLabel("Additional sync divider", this);
+    QLabel* lbl_delete = new QLabel("Delete", this);
 
     // Add the very first row
     // *Widget, row, column, rowspan, colspan
@@ -33,6 +36,7 @@ void ChannelOverviewUI::init_ui_table()
     this->ui->gridLayout->addWidget(lbl_pulses_channel, 0, 1, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(lbl_is_pulses_channel, 0, 2, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(lbl_additional_sync_div, 0, 3, 1, 1, Qt::AlignTop);
+    this->ui->gridLayout->addWidget(lbl_delete, 0, 4, 1, 1, Qt::AlignTop);
 }
 
 void ChannelOverviewUI::use_channel_prefs(chaninfo ci)
@@ -84,11 +88,15 @@ void ChannelOverviewUI::add_channel_widgets(chaninfo ci)
     cw.cnt_additional_sync_div->setMinimumWidth(1);
     cw.cnt_additional_sync_div->setEnabled(true);
 
+    cw.delete_chan = new QToolButton(this);
+    cw.delete_chan->setIcon(style()->standardIcon(QStyle::SP_TitleBarCloseButton));
+
     int row = this->ui->gridLayout->rowCount() + 1;
     this->ui->gridLayout->addWidget(cw.chan_num, row, 0, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(cw.combo, row, 1, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(cw.is_pulses, row, 2, 1, 1, Qt::AlignTop);
     this->ui->gridLayout->addWidget(cw.cnt_additional_sync_div, row, 3, 1, 1, Qt::AlignTop);
+    this->ui->gridLayout->addWidget(cw.delete_chan, row, 4, 1, 1, Qt::AlignTop);
 
     //this->ui->gridLayout->addWidget(cw.num_counts, row, 3, 1, 1, Qt::AlignTop);
     //this->ui->gridLayout->addWidget(cw.avg_cps, row, 4, 1, 1, Qt::AlignTop);
@@ -101,6 +109,9 @@ void ChannelOverviewUI::add_channel_widgets(chaninfo ci)
 
     // connect(cw.cnt_delay, SIGNAL(valueChanged(double)), this, SLOT(delay_changed(double)));
     connect(cw.cnt_additional_sync_div, SIGNAL(valueChanged(double)), this, SLOT(additional_sync_div_changed(double)));
+
+    connect(cw.delete_chan, &QToolButton::clicked,
+        [=, this](){this->delete_channel(ci.ID);});
 }
 
 void ChannelOverviewUI::update_all_pulsechan_dropdowns()
@@ -340,6 +351,41 @@ void ChannelOverviewUI::on_btn_add_channel_clicked()
         this->add_channel_widgets(ci);
 
         this->update_all_pulsechan_dropdowns();
-        this->use_channel_prefs(ci);
+        for (auto & [_, ci] : chan_info) {
+            use_channel_prefs(ci);
+        }
+    }
+}
+
+void ChannelOverviewUI::delete_channel(uint64_t index)
+{
+    // Unset other channels depending on this as a pulses channel
+    if (chan_info[index].is_pulses_channel) {
+        for (auto & [id, info] : chan_info) {
+            if (info.has_pulses_channel and info.corresponding_pulses_channel == index) {
+                channels_widgets[id].combo->setCurrentIndex(0);
+            }
+        }
+    }
+
+    // Unset this channel as depending on a pulses channel
+    chan_widgets cw = channels_widgets[index];
+    cw.combo->setCurrentIndex(0);
+
+    // Remove channel widgets
+    for (auto w : (QWidget* []) {cw.chan_num, cw.combo, cw.is_pulses, cw.cnt_additional_sync_div, cw.delete_chan}) {
+        ui->gridLayout->removeWidget(w);
+        delete w;
+    }
+    channels_widgets.erase(index);
+
+    // It would be nice to move widgets below this up, but the empty rows
+    // completely collapse, so it's not worth the effort
+
+    chan_info.erase(index);
+
+    update_all_pulsechan_dropdowns();
+    for (auto & [_, ci] : chan_info) {
+        use_channel_prefs(ci);
     }
 }

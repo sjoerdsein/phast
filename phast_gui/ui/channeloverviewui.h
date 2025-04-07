@@ -1,5 +1,6 @@
 /* Copyright (c) 2020 Stijn Hinterding, Utrecht University
- * This sofware is licensed under the MIT license (see the LICENSE file)	
+ * Modifications (c) 2025 Sjoerd Seinhorst, Utrecht University
+ * This sofware is licensed under the MIT license (see the LICENSE file)
 */
 
 #ifndef CHANNELOVERVIEWUI_H
@@ -9,6 +10,8 @@
 #include <QLabel>
 #include <QComboBox>
 #include <QSpinBox>
+#include <QToolButton>
+#include <cstdint>
 
 #ifdef TT_USE_BASE_QWT
 #include <qwt/qwt_counter.h>
@@ -41,6 +44,7 @@ private:
         QLabel* is_pulses;
         QwtCounter* cnt_additional_sync_div;
         QwtCounter* cnt_delay;
+        QToolButton* delete_chan;
     };
 
     void update_all_pulsechan_dropdowns();
@@ -78,6 +82,7 @@ private:
     void add_channel_widgets(chaninfo ci);
     void use_channel_prefs(chaninfo ci);
     void set_channel_as_pulses_channel(uint64_t index, bool is_pulses);
+    void delete_channel(uint64_t index);
 
     LineState state;
 };

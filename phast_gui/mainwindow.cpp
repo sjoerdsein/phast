@@ -383,6 +383,19 @@ void MainWindow::on_actionChannels_triggered()
             all_chans.push_back(pair.second.ID);
         }
 
+        // Also handle deleted channels
+        std::vector<uint64_t> deleted_channels {};
+        for (const auto & [id, _] : settings.GetChannelInfos()) {
+            if (not ui_chan_info.contains(id)) {
+                significant_change = true;
+                deleted_channels.push_back(id);
+            }
+        }
+
+        for (auto id : deleted_channels) {
+            settings.chan_infos.erase(id);
+        }
+
         if (significant_change) {
             if (this->data_storage != nullptr)
                 delete this->data_storage;
